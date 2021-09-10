@@ -1451,9 +1451,7 @@ static void gui_display_settings()
 		    	}
 		    	OptionCheckbox("Widescreen Game Cheats", config::WidescreenGameHacks,
 		    			"Modify the game so that it displays in 16:9 anamorphic format and use horizontal screen stretching. Only some games are supported.");
-#ifndef __APPLE__
 		    	OptionCheckbox("VSync", config::VSync, "Synchronizes the frame rate with the screen refresh rate. Recommended");
-#endif
 		    	OptionCheckbox("Show FPS Counter", config::ShowFPS, "Show on-screen frame/sec counter");
 				OptionCheckbox("Disable Filtering", config::NoFilter, "Disable texture filtering, makes games more pixely");
 		    	OptionCheckbox("Show VMU In-game", config::FloatVMUs, "Show the VMU LCD screens while in-game");
@@ -1578,7 +1576,7 @@ static void gui_display_settings()
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, normal_padding);
 			OptionCheckbox("Enable DSP", config::DSPEnabled,
-					"Enable the Dreamcast Digital Sound Processor. Only recommended on fast platforms");
+			"Enable the Dreamcast Digital Sound Processor. Only recommended on fast platforms");
 			OptionCheckbox("Force Mono", config::ForceMono,"Force audio to MONO");
 			OptionCheckbox("Audio Sync", config::LimitFPS,"Limit Emulator Speed to keep the audio from distorting, usually a good thing");
 			OptionSlider("Volume", config::AudioVolume, 0, 100,

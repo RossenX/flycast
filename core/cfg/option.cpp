@@ -41,6 +41,9 @@ Option<int> SavestateSlot("Dreamcast.SavestateSlot");
 // Sound
 
 Option<bool> DSPEnabled("aica.DSPEnabled", false);
+Option<bool> ForceMono("aica.ForceMono",false);
+Option<int> AudioVolume("aica.AudioVolume", 50);
+
 #if HOST_CPU == CPU_ARM
 Option<int> AudioBufferSize("aica.BufferSize", 5644);	// 128 ms
 #else
@@ -96,6 +99,8 @@ Option<bool> VSync("rend.vsync", true);
 Option<u64> PixelBufferSize("rend.PixelBufferSize", 512 * 1024 * 1024);
 Option<int> AnisotropicFiltering("rend.AnisotropicFiltering", 1);
 Option<bool> ThreadedRendering("rend.ThreadedRendering", true);
+Option<bool> NoFilter("rend.NoFilter", true);
+Option<bool> LimitFPS("rend.LimitFPS", true);
 
 // Misc
 
@@ -107,7 +112,7 @@ Option<bool> FastGDRomLoad("FastGDRomLoad", false);
 Option<bool> OpenGlChecks("OpenGlChecks", false, "validate");
 
 Option<std::vector<std::string>, false> ContentPath("Dreamcast.ContentPath");
-Option<bool, false> HideLegacyNaomiRoms("Dreamcast.HideLegacyNaomiRoms", true);
+Option<bool, false> HideLegacyNaomiRoms("Dreamcast.HideLegacyNaomiRoms", false);
 
 // Network
 

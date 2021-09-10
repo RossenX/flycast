@@ -63,7 +63,7 @@ struct maple_sega_controller: maple_base
 	{
 		mutualExclusion(kcode, DC_DPAD_UP | DC_DPAD_DOWN);
 		mutualExclusion(kcode, DC_DPAD_LEFT | DC_DPAD_RIGHT);
-		return kcode | 0xF901;		// mask off DPad2, C, D and Z;
+		return kcode; // | 0xF901;		// mask off DPad2, C, D and Z;
 	}
 
 	virtual u32 get_analog_axis(int index, const PlainJoystickState &pjs)

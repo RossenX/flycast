@@ -464,22 +464,17 @@ static void gui_display_commands()
 
     ImGui::Begin("##commands", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
 
-    bool loadSaveStateDisabled = settings.imgread.ImagePath[0] == '\0' || settings.online;
-	if (loadSaveStateDisabled)
+	if (settings.imgread.ImagePath[0] == '\0')
 	{
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 	}
-
-	// Load State
-	if (ImGui::Button("Load State", ImVec2(110 * scaling, 50 * scaling)) && !loadSaveStateDisabled)
+	if (ImGui::Button("Load State", ImVec2(110 * scaling, 50 * scaling)))
 	{
 		gui_state = GuiState::Closed;
 		dc_loadstate(config::SavestateSlot);
 	}
 	ImGui::SameLine();
-
-	// Slot #
 	std::string slot = "Slot " + std::to_string((int)config::SavestateSlot + 1);
 	if (ImGui::Button(slot.c_str(), ImVec2(80 * scaling - ImGui::GetStyle().FramePadding.x, 50 * scaling)))
 		ImGui::OpenPopup("slot_select_popup");
@@ -494,22 +489,18 @@ static void gui_display_commands()
         ImGui::EndPopup();
     }
 	ImGui::SameLine();
-
-	// Save State
-	if (ImGui::Button("Save State", ImVec2(110 * scaling, 50 * scaling)) && !loadSaveStateDisabled)
+	if (ImGui::Button("Save State", ImVec2(110 * scaling, 50 * scaling)))
 	{
 		gui_state = GuiState::Closed;
 		dc_savestate(config::SavestateSlot);
 	}
-	if (loadSaveStateDisabled)
+	if (settings.imgread.ImagePath[0] == '\0')
 	{
         ImGui::PopItemFlag();
         ImGui::PopStyleVar();
 	}
 
 	ImGui::Columns(2, "buttons", false);
-
-	// Settings
 	if (ImGui::Button("Settings", ImVec2(150 * scaling, 50 * scaling)))
 	{
 		gui_state = GuiState::Settings;
@@ -522,8 +513,6 @@ static void gui_display_commands()
 	}
 
 	ImGui::NextColumn();
-
-	// Insert/Eject Disk
 	const char *disk_label = libGDR_GetDiscType() == Open ? "Insert Disk" : "Eject Disk";
 	if (ImGui::Button(disk_label, ImVec2(150 * scaling, 50 * scaling)))
 	{
@@ -538,25 +527,11 @@ static void gui_display_commands()
 		}
 	}
 	ImGui::NextColumn();
-
-	// Cheats
-	if (settings.online)
-	{
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-	}
-	if (ImGui::Button("Cheats", ImVec2(150 * scaling, 50 * scaling)) && !settings.online)
+	if (ImGui::Button("Cheats", ImVec2(150 * scaling, 50 * scaling)))
 	{
 		gui_state = GuiState::Cheats;
 	}
-	if (settings.online)
-	{
-        ImGui::PopItemFlag();
-        ImGui::PopStyleVar();
-	}
 	ImGui::Columns(1, nullptr, false);
-
-	// Exit
 	if (ImGui::Button("Exit", ImVec2(300 * scaling + ImGui::GetStyle().ColumnsMinSpacing + ImGui::GetStyle().FramePadding.x * 2 - 1,
 			50 * scaling)))
 	{
@@ -1480,6 +1455,7 @@ static void gui_display_settings()
 		    	OptionCheckbox("VSync", config::VSync, "Synchronizes the frame rate with the screen refresh rate. Recommended");
 #endif
 		    	OptionCheckbox("Show FPS Counter", config::ShowFPS, "Show on-screen frame/sec counter");
+				OptionCheckbox("Disable Filtering", config::NoFilter, "Disable texture filtering, makes games more pixely");
 		    	OptionCheckbox("Show VMU In-game", config::FloatVMUs, "Show the VMU LCD screens while in-game");
 		    	OptionCheckbox("Rotate Screen 90°", config::Rotate90, "Rotate the screen 90° counterclockwise");
 		    	OptionCheckbox("Delay Frame Swapping", config::DelayFrameSwapping,
@@ -1603,6 +1579,10 @@ static void gui_display_settings()
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, normal_padding);
 			OptionCheckbox("Enable DSP", config::DSPEnabled,
 					"Enable the Dreamcast Digital Sound Processor. Only recommended on fast platforms");
+			OptionCheckbox("Force Mono", config::ForceMono,"Force audio to MONO");
+			OptionCheckbox("Audio Sync", config::LimitFPS,"Limit Emulator Speed to keep the audio from distorting, usually a good thing");
+			OptionSlider("Volume", config::AudioVolume, 0, 100,
+				"Guess...");
 #ifdef __ANDROID__
 			if (config::AudioBackend.get() == "auto" || config::AudioBackend.get() == "android")
 				OptionCheckbox("Automatic Latency", config::AutoLatency,
@@ -1796,7 +1776,7 @@ static void gui_display_settings()
 		if (ImGui::BeginTabItem("About"))
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, normal_padding);
-		    header("Flycast");
+		    header("Flycast BEAR");
 		    {
 				ImGui::Text("Version: %s", GIT_VERSION);
 				ImGui::Text("Git Hash: %s", GIT_HASH);
@@ -2084,7 +2064,7 @@ static void gui_network_start()
 	{
 		ImGui::Text("STARTING NETWORK...");
 		if (NetworkHandshake::instance->canStartNow())
-			ImGui::Text("Press Start to start the game now.");
+			ImGui::Text("Hosting... waiting for client...");
 	}
 	ImGui::Text("%s", get_notification().c_str());
 

@@ -68,7 +68,43 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 		if (key <= DC_BTN_RELOAD)
 		{
 			if (pressed)
+			{
 				kcode[port] &= ~key;
+				// Avoid two opposite dpad keys being pressed simultaneously
+				switch (key)
+				{
+				case DC_DPAD_UP:
+					kcode[port] |= DC_DPAD_DOWN;
+					break;
+				case DC_DPAD_DOWN:
+					kcode[port] |= DC_DPAD_UP;
+					break;
+				case DC_DPAD_LEFT:
+					kcode[port] |= DC_DPAD_RIGHT;
+					break;
+				case DC_DPAD_RIGHT:
+					kcode[port] |= DC_DPAD_LEFT;
+					break;
+				case DC_DPAD2_UP:
+					if (settings.platform.system == DC_PLATFORM_DREAMCAST)
+						kcode[port] |= DC_DPAD2_DOWN;
+					break;
+				case DC_DPAD2_DOWN:
+					if (settings.platform.system == DC_PLATFORM_DREAMCAST)
+						kcode[port] |= DC_DPAD2_UP;
+					break;
+				case DC_DPAD2_LEFT:
+					if (settings.platform.system == DC_PLATFORM_DREAMCAST)
+						kcode[port] |= DC_DPAD2_RIGHT;
+					break;
+				case DC_DPAD2_RIGHT:
+					if (settings.platform.system == DC_PLATFORM_DREAMCAST)
+						kcode[port] |= DC_DPAD2_LEFT;
+					break;
+				default:
+					break;
+				}
+			}
 			else
 				kcode[port] |= key;
 #ifdef TEST_AUTOMATION
@@ -78,7 +114,61 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 		}
 		else
 		{
-			switch (key)
+			// If this is GGPO set the digital controls instead
+			if(config::GGPOEnable){
+				switch (key)
+				{
+				case EMU_BTN_ESCAPE:
+					if (pressed)
+						dc_exit();
+					break;
+
+				case EMU_BTN_MENU:
+					if (pressed)
+						gui_open_settings();
+					break;
+
+				case EMU_BTN_FFORWARD:
+					if (pressed && !gui_is_open())
+						settings.input.fastForwardMode = !settings.input.fastForwardMode && !settings.online;
+					break;
+
+				case EMU_BTN_TRIGGER_LEFT:
+					if(pressed){kcode[port] &= ~DC_BTN_Z;
+					}else{kcode[port] |= DC_BTN_Z;}
+					break;
+
+				case EMU_BTN_TRIGGER_RIGHT:
+					if(pressed){kcode[port] &= ~DC_BTN_C;
+					}else{kcode[port] |= DC_BTN_C;}
+					break;
+
+				case EMU_BTN_ANA_UP:
+				if(pressed){kcode[port] &= ~DC_DPAD_UP;
+					}else{kcode[port] |= DC_DPAD_UP;}
+					break;
+
+				case EMU_BTN_ANA_DOWN:
+				if(pressed){kcode[port] &= ~DC_DPAD_DOWN;
+					}else{kcode[port] |= DC_DPAD_DOWN;}
+					break;
+
+				case EMU_BTN_ANA_LEFT:
+				if(pressed){kcode[port] &= ~DC_DPAD_LEFT;
+					}else{kcode[port] |= DC_DPAD_LEFT;}
+					break;
+
+				case EMU_BTN_ANA_RIGHT:
+				if(pressed){kcode[port] &= ~DC_DPAD_RIGHT;
+					}else{kcode[port] |= DC_DPAD_RIGHT;}
+					break;
+
+				default:
+					return false;
+				}
+
+			}else{
+				switch (key)
 			{
 			case EMU_BTN_ESCAPE:
 				if (pressed)
@@ -99,40 +189,22 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 				rt[port] = pressed ? 255 : 0;
 				break;
 			case EMU_BTN_ANA_UP:
+				joyy[port] = pressed ? -128 : 0;
+				break;
 			case EMU_BTN_ANA_DOWN:
-				{
-					if (pressed)
-						digitalToAnalogState[port] |= key;
-					else
-						digitalToAnalogState[port] &= ~key;
-					const u32 upDown = digitalToAnalogState[port] & (EMU_BTN_ANA_UP | EMU_BTN_ANA_DOWN);
-					if (upDown == 0 || upDown == (EMU_BTN_ANA_UP | EMU_BTN_ANA_DOWN))
-						joyy[port] = 0;
-					else if (upDown == EMU_BTN_ANA_UP)
-						joyy[port] = -128;
-					else
-						joyy[port] = 127;
-				}
+				joyy[port] = pressed ? 127 : 0;
 				break;
 			case EMU_BTN_ANA_LEFT:
+				joyx[port] = pressed ? -128 : 0;
+				break;
 			case EMU_BTN_ANA_RIGHT:
-			{
-				if (pressed)
-					digitalToAnalogState[port] |= key;
-				else
-					digitalToAnalogState[port] &= ~key;
-				const u32 leftRight = digitalToAnalogState[port] & (EMU_BTN_ANA_LEFT | EMU_BTN_ANA_RIGHT);
-				if (leftRight == 0 || leftRight == (EMU_BTN_ANA_LEFT | EMU_BTN_ANA_RIGHT))
-					joyx[port] = 0;
-				else if (leftRight == EMU_BTN_ANA_LEFT)
-					joyx[port] = -128;
-				else
-					joyx[port] = 127;
-			}
+				joyx[port] = pressed ? 127 : 0;
 				break;
 			default:
 				return false;
 			}
+			}
+			
 		}
 
 		DEBUG_LOG(INPUT, "%d: BUTTON %s %x -> %d. kcode=%x", port, pressed ? "down" : "up", code, key, kcode[port]);
@@ -158,98 +230,169 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 	return rc;
 }
 
-bool GamepadDevice::gamepad_axis_input(u32 code, int value)
+bool GamepadDevice::gamepad_axis_input(int code, int value)
 {
-	s32 v;
-	if (input_mapper->get_axis_inverted(0, code))
-		v = (get_axis_min_value(code) + get_axis_range(code) - value) * 255 / get_axis_range(code) - 128;
-	else
-		v = (value - get_axis_min_value(code)) * 255 / get_axis_range(code) - 128; //-128 ... +127 range
-	if (_input_detected != NULL && !_detecting_button
-			&& os_GetSeconds() >= _detection_start_time && (v >= 64 || v <= -64))
-	{
+
+	s32 v; // The final Value
+	if(code > 3){v = value / 128; // Should make a value between 0-256
+	}else{v = value / 256; // Should make a value between 0-128
+	}
+	
+	NOTICE_LOG(INPUT,"Code: %d | %d | %d",code,value,v);
+
+	// This little bit looks to be for the keymapping
+	if (_input_detected != NULL && !_detecting_button && os_GetSeconds() >= _detection_start_time && (v >= 64 || v <= -64)){
 		_input_detected(code);
 		_input_detected = NULL;
 		return true;
 	}
-	if (!input_mapper || _maple_port < 0 || _maple_port > 4)
-		return false;
+
+	if (!input_mapper || _maple_port < 0 || _maple_port > 4) return false;
 
 	auto handle_axis = [&](u32 port, DreamcastKey key)
 	{
 
-		if ((int)key < 0x10000)
+		if ((int)key < 0x10000) // Key Codes DIGITAL
 		{
-			kcode[port] |= key | (key << 1);
+			if(code > 3){ // This is a trigger
+
+			if (v >= 64)
+				kcode[port] |= key;
+			else if (v < 64)
+				kcode[port] |= ~key;
+
+			}else{
+				kcode[port] |= key | (key << 1);
 			if (v <= -64)
 				kcode[port] &= ~key;
 			else if (v >= 64)
 				kcode[port] &= ~(key << 1);
+			}
+			
 
-			// printf("Mapped to %d %d %d\n",mo,kcode[port]&mo,kcode[port]&(mo*2));
 		}
 		else if (((int)key >> 16) == 1)	// Triggers
 		{
-			//printf("T-AXIS %d Mapped to %d -> %d\n",key, value, v + 128);
+			if(v < 0){v=0;}
+			if(v > 255){v=255;}
+			
+			if(config::GGPOEnable){ // If this is GGPO the digital controls instead
 
-			if (key == DC_AXIS_LT)
-				lt[port] = (u8)(v + 128);
-			else if (key == DC_AXIS_RT)
-				rt[port] = (u8)(v + 128);
-			else
-				return false;
+				if (key == DC_AXIS_LT){
+					if(v > 64){kcode[port] &= ~DC_BTN_Z;
+					}else{kcode[port] |= DC_BTN_Z;}
+
+				}else if (key == DC_AXIS_RT){
+					if(v > 64){kcode[port] &= ~DC_BTN_C;
+					}else{kcode[port] |= DC_BTN_C;}
+
+				}else{return false;}
+				
+			}else
+			{
+				if (key == DC_AXIS_LT){
+					lt[port] = (u8)v;
+					NOTICE_LOG(INPUT, "LT: %d", lt[port]);
+				}else if (key == DC_AXIS_RT){
+					rt[port] = (u8)v;
+					NOTICE_LOG(INPUT, "RT: %d", rt[port]);
+				}else{return false;}
+
+			}
+			
 		}
 		else if (((int)key >> 16) == 2) // Analog axes
 		{
-			//printf("AXIS %d Mapped to %d -> %d\n", key, value, v);
 			s8 *this_axis;
 			s8 *other_axis;
 			switch (key)
-			{
-			case DC_AXIS_X:
-				this_axis = &joyx[port];
-				other_axis = &joyy[port];
-				break;
+				{
+				case DC_AXIS_X:
+					this_axis = &joyx[port];
+					other_axis = &joyy[port];
+					break;
 
-			case DC_AXIS_Y:
-				this_axis = &joyy[port];
-				other_axis = &joyx[port];
-				break;
+				case DC_AXIS_Y:
+					this_axis = &joyy[port];
+					other_axis = &joyx[port];
+					break;
 
-			case DC_AXIS_X2:
-				this_axis = &joyrx[port];
-				other_axis = &joyry[port];
-				break;
+				case DC_AXIS_X2:
+					this_axis = &joyrx[port];
+					other_axis = &joyry[port];
+					break;
 
-			case DC_AXIS_Y2:
-				this_axis = &joyry[port];
-				other_axis = &joyrx[port];
-				break;
+				case DC_AXIS_Y2:
+					this_axis = &joyry[port];
+					other_axis = &joyrx[port];
+					break;
 
-			default:
-				return false;
-			}
-			// Radial dead zone
-			// FIXME compute both axes at the same time
-			if ((float)(v * v + *other_axis * *other_axis) < input_mapper->dead_zone * input_mapper->dead_zone * 128.f * 128.f)
-			{
+				default:
+					return false;
+				}
+			
+			if ((float)(v * v + *other_axis * *other_axis) < input_mapper->dead_zone * input_mapper->dead_zone * 128.f * 128.f){
 				*this_axis = 0;
 				*other_axis = 0;
+
+				if(config::GGPOEnable)
+				{
+					if(key == DC_AXIS_X){
+					kcode[port] |= DC_DPAD_LEFT;
+					kcode[port] |= DC_DPAD_RIGHT;
+					}else if(key == DC_AXIS_Y){
+						kcode[port] |= DC_DPAD_UP;
+						kcode[port] |= DC_DPAD_DOWN;
+						}else if(key == DC_AXIS_X2){}else if(key == DC_AXIS_Y2){}
+				}
 			}
-			else
-				*this_axis = (s8)v;
+
+			else{
+				if(config::GGPOEnable){ // Translate the analog to digital for GGPO
+					if(key == DC_AXIS_X){
+						if(v > 0){kcode[port] &= ~DC_DPAD_RIGHT;}
+						if(v < 0){kcode[port] &= ~DC_DPAD_LEFT;}
+
+					}else if(key == DC_AXIS_Y){
+						if(v > 0){kcode[port] &= ~DC_DPAD_DOWN;}
+						if(v < 0){kcode[port] &= ~DC_DPAD_UP;}
+						
+					}else if(key == DC_AXIS_X2){
+						// Iono are these ever used
+					}else if(key == DC_AXIS_Y2){
+						// Iono are these ever used
+					}
+				}else{
+					*this_axis = (s8)v;
+				NOTICE_LOG(INPUT, "Axis: %d", v);
+				}
+				
+			}
+			/**/
 		}
 		else if (((int)key >> 16) == 4) // Map triggers to digital buttons
 		{
-			if (v <= -64)
+			if(code > 3){
+				
+				if (v < 64)
 				kcode[port] |=  (key & ~0x40000); // button released
 			else if (v >= 64)
 				kcode[port] &= ~(key & ~0x40000); // button pressed
+
+			}else{
+				if (v <= -64)
+				kcode[port] |=  (key & ~0x40000); // button released
+			else if (v >= 64)
+				kcode[port] &= ~(key & ~0x40000); // button pressed
+			}
+			
+			
 		}
 		else
 			return false;
 
 		return true;
+
 	};
 
 	bool rc = false;
@@ -365,8 +508,6 @@ std::string GamepadDevice::make_mapping_filename(bool instance, int system)
 
 bool GamepadDevice::find_mapping(int system)
 {
-	if (!_remappable)
-		return true;
 	std::string mapping_file;
 	mapping_file = make_mapping_filename(false, system);
 
@@ -385,8 +526,6 @@ bool GamepadDevice::find_mapping(int system)
 
 bool GamepadDevice::find_mapping(const char *custom_mapping /* = nullptr */)
 {
-	if (!_remappable)
-		return true;
 	std::string mapping_file;
 	if (custom_mapping != nullptr)
 		mapping_file = custom_mapping;

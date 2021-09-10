@@ -37,7 +37,7 @@ public:
 	virtual void set_maple_port(int port) { _maple_port = port; }
 	const std::string& unique_id() { return _unique_id; }
 	virtual bool gamepad_btn_input(u32 code, bool pressed);
-	bool gamepad_axis_input(u32 code, int value);
+	bool gamepad_axis_input(int code, int value);
 	virtual ~GamepadDevice() = default;
 	
 	virtual void detect_btn_input(input_detected_cb button_pressed);
@@ -73,8 +73,7 @@ public:
 	bool find_mapping(int system);
 protected:
 	GamepadDevice(int maple_port, const char *api_name, bool remappable = true)
-		: _api_name(api_name), _maple_port(maple_port), _input_detected(nullptr), _remappable(remappable),
-		  digitalToAnalogState{}
+		: _api_name(api_name), _maple_port(maple_port), _input_detected(nullptr), _remappable(remappable)
 	{
 	}
 
@@ -109,7 +108,6 @@ private:
 	double _detection_start_time = 0.0;
 	input_detected_cb _input_detected;
 	bool _remappable;
-	u32 digitalToAnalogState[4];
 
 	static std::vector<std::shared_ptr<GamepadDevice>> _gamepads;
 	static std::mutex _gamepads_mutex;

@@ -23,6 +23,7 @@
 #include "input/gamepad_device.h"
 #include <xxhash.h>
 #include "oslib/oslib.h"
+#include "cfg/option.h"
 
 #define LOGJVS(...) DEBUG_LOG(JVS, __VA_ARGS__)
 
@@ -35,6 +36,13 @@ void load_naomi_eeprom()
 	{
 		EEPROM_loaded = true;
 		std::string eeprom_file = hostfs::getArcadeFlashPath() + ".eeprom";
+
+		if(config::GGPOEnable && !config::ActAsServer)
+			eeprom_file.append("_client");
+
+		if(config::GGPOEnable && config::ActAsServer)
+			eeprom_file.append("_host");
+
 		FILE* f = nowide::fopen(eeprom_file.c_str(), "rb");
 		if (f)
 		{
@@ -561,13 +569,13 @@ protected:
 		case 7:
 			return read_joystick_y(3);
 		case 8:
-			return maple_rt[0] << 8;
+			return rt[0] << 8;
 		case 9:
-			return maple_rt[1] << 8;
+			return rt[1] << 8;
 		case 10:
-			return maple_rt[2] << 8;
+			return rt[2] << 8;
 		case 11:
-			return maple_rt[3] << 8;
+			return rt[3] << 8;
 		default:
 			return 0x8000;
 		}
@@ -598,7 +606,7 @@ protected:
 		jvs_io_board::read_digital_in(buttons, v);
 		for (u32 player = 0; player < player_count; player++)
 		{
-			u8 trigger = maple_rt[player] >> 2;
+			u8 trigger = rt[player] >> 2;
 					// Ball button
 			v[player] = ((trigger & 0x20) << 3) | ((trigger & 0x10) << 5) | ((trigger & 0x08) << 7)
 					| ((trigger & 0x04) << 9) | ((trigger & 0x02) << 11) | ((trigger & 0x01) << 13)
@@ -976,6 +984,13 @@ void maple_naomi_jamma::handle_86_subcommand()
 			memcpy(EEPROM + address, dma_buffer_in + 4, size);
 
 			std::string eeprom_file = hostfs::getArcadeFlashPath() + ".eeprom";
+			
+			if(config::GGPOEnable && !config::ActAsServer)
+				eeprom_file.append("_client");
+
+			if(config::GGPOEnable && config::ActAsServer)
+				eeprom_file.append("_host");
+
 			FILE* f = nowide::fopen(eeprom_file.c_str(), "wb");
 			if (f)
 			{
@@ -1424,13 +1439,6 @@ u32 jvs_io_board::handle_jvs_message(u8 *buffer_in, u32 length_in, u8 *buffer_ou
 					if ((maple_kcode[p] & (1 << i)) == 0)
 						buttons[p] |= naomi_button_mapping[i];
 #endif
-			for (u32& button : buttons)
-			{
-				if ((button & (NAOMI_UP_KEY | NAOMI_DOWN_KEY)) == (NAOMI_UP_KEY | NAOMI_DOWN_KEY))
-					button &= ~(NAOMI_UP_KEY | NAOMI_DOWN_KEY);
-				if ((button & (NAOMI_LEFT_KEY | NAOMI_RIGHT_KEY)) == (NAOMI_LEFT_KEY | NAOMI_RIGHT_KEY))
-					button &= ~(NAOMI_LEFT_KEY | NAOMI_RIGHT_KEY);
-			}
 
 			JVS_STATUS1();	// status
 			for (u32 cmdi = 0; cmdi < length_in; )
@@ -1537,9 +1545,9 @@ u32 jvs_io_board::handle_jvs_message(u8 *buffer_in, u32 length_in, u8 *buffer_ou
 									if (axisDesc.type == Half)
 									{
 										if (axisDesc.axis == 4)
-											axis_value = maple_rt[player_num] << 8;
+											axis_value = rt[player_num] << 8;
 										else if (axisDesc.axis == 5)
-											axis_value = maple_lt[player_num] << 8;
+											axis_value = lt[player_num] << 8;
 										else
 											axis_value = 0;
 										if (axisDesc.inverted)

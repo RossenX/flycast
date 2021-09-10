@@ -355,6 +355,7 @@ struct settings_t
 
 	bool disableRenderer;
 	bool online;
+	bool endOfFrame;
 };
 
 extern settings_t settings;

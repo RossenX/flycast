@@ -410,18 +410,11 @@ void stopSession()
 	dc_set_network_state(false);
 }
 
-void getInput(u32 out_kcode[4], u8 out_lt[4], u8 out_rt[4])
+void getInput(u32 out_kcode[4])
 {
 	// TODO need a std::recursive_mutex to use a lock here
-	if (ggpoSession == nullptr)
-	{
-		memcpy(out_kcode, kcode, sizeof(kcode));
-		memcpy(out_lt, lt, sizeof(lt));
-		memcpy(out_rt, rt, sizeof(rt));
-		return;
-	}
-	memset(out_lt, 0, sizeof(lt));
-	memset(out_rt, 0, sizeof(rt));
+	memcpy(out_kcode, kcode, sizeof(kcode));
+	if (ggpoSession == nullptr){return;}
 	// should not call any callback
 	u32 inputs[4];
 	ggpo_synchronize_input(ggpoSession, (void *)&inputs[0], sizeof(inputs[0]) * 2, nullptr);	// FIXME numPlayers
@@ -429,13 +422,16 @@ void getInput(u32 out_kcode[4], u8 out_lt[4], u8 out_rt[4])
 	out_kcode[1] = ~inputs[1];
 	out_kcode[2] = ~0;
 	out_kcode[3] = ~0;
-	if (settings.platform.system != DC_PLATFORM_NAOMI)
-	{
-		out_lt[0] = (inputs[0] & EMU_BTN_TRIGGER_RIGHT) != 0 ? 255 : 0;
-		out_lt[0] = (inputs[0] & EMU_BTN_TRIGGER_LEFT) != 0 ? 255 : 0;
-		out_lt[1] = (inputs[1] & EMU_BTN_TRIGGER_RIGHT) != 0 ? 255 : 0;
-		out_lt[1] = (inputs[1] & EMU_BTN_TRIGGER_LEFT) != 0 ? 255 : 0;
-	}
+	for (int i = 0; i < 4; i++) {
+		out_kcode[i] = ~inputs[i];
+		lt[i] = 0;
+		rt[i] = 0;
+		joyx[i] = 0;
+		joyy[i] = 0;
+		joyrx[i] = 0;
+		joyry[i] = 0;
+		}
+		
 }
 
 bool nextFrame()
@@ -464,17 +460,6 @@ bool nextFrame()
 	// may call save_game_state
 	do {
 		u32 input = ~kcode[localPlayerNum];
-		if (settings.platform.system != DC_PLATFORM_NAOMI)
-		{
-			if (rt[localPlayerNum] >= 64)
-				input |= EMU_BTN_TRIGGER_RIGHT;
-			else
-				input &= ~EMU_BTN_TRIGGER_RIGHT;
-			if (lt[localPlayerNum] >= 64)
-				input |= EMU_BTN_TRIGGER_LEFT;
-			else
-				input &= ~EMU_BTN_TRIGGER_LEFT;
-		}
 		GGPOErrorCode result = ggpo_add_local_input(ggpoSession, localPlayer, &input, sizeof(input));
 		if (result == GGPO_OK)
 			break;

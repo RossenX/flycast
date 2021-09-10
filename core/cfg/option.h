@@ -361,10 +361,13 @@ extern Option<int> SavestateSlot;
 
 // Sound
 
-constexpr bool LimitFPS = true;
+//constexpr bool LimitFPS = true;
+extern Option<bool> LimitFPS;
 extern Option<bool> DSPEnabled;
 extern Option<int> AudioBufferSize;	//In samples ,*4 for bytes
 extern Option<bool> AutoLatency;
+extern Option<bool> ForceMono;
+extern Option<int> AudioVolume;
 
 extern OptionString AudioBackend;
 
@@ -447,6 +450,7 @@ extern Option<bool> VSync;
 extern Option<u64> PixelBufferSize;
 extern Option<int> AnisotropicFiltering;
 extern Option<bool> ThreadedRendering;
+extern Option<bool> NoFilter;
 
 // Misc
 

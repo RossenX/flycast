@@ -70,40 +70,6 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 			if (pressed)
 			{
 				kcode[port] &= ~key;
-				// Avoid two opposite dpad keys being pressed simultaneously
-				switch (key)
-				{
-				case DC_DPAD_UP:
-					kcode[port] |= DC_DPAD_DOWN;
-					break;
-				case DC_DPAD_DOWN:
-					kcode[port] |= DC_DPAD_UP;
-					break;
-				case DC_DPAD_LEFT:
-					kcode[port] |= DC_DPAD_RIGHT;
-					break;
-				case DC_DPAD_RIGHT:
-					kcode[port] |= DC_DPAD_LEFT;
-					break;
-				case DC_DPAD2_UP:
-					if (settings.platform.system == DC_PLATFORM_DREAMCAST)
-						kcode[port] |= DC_DPAD2_DOWN;
-					break;
-				case DC_DPAD2_DOWN:
-					if (settings.platform.system == DC_PLATFORM_DREAMCAST)
-						kcode[port] |= DC_DPAD2_UP;
-					break;
-				case DC_DPAD2_LEFT:
-					if (settings.platform.system == DC_PLATFORM_DREAMCAST)
-						kcode[port] |= DC_DPAD2_RIGHT;
-					break;
-				case DC_DPAD2_RIGHT:
-					if (settings.platform.system == DC_PLATFORM_DREAMCAST)
-						kcode[port] |= DC_DPAD2_LEFT;
-					break;
-				default:
-					break;
-				}
 			}
 			else
 				kcode[port] |= key;

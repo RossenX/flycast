@@ -1581,8 +1581,8 @@ static void gui_display_settings()
 			"Enable the Dreamcast Digital Sound Processor. Only recommended on fast platforms");
 			OptionCheckbox("Force Mono", config::ForceMono,"Force audio to MONO");
 			OptionCheckbox("Audio Sync", config::LimitFPS,"Limit Emulator Speed to keep the audio from distorting, usually a good thing");
-			OptionSlider("Volume", config::AudioVolume, 0, 100,
-				"Guess...");
+			OptionSlider("Volume", config::AudioVolume, 0, 100,"Guess...");
+
 #ifdef __ANDROID__
 			if (config::AudioBackend.get() == "auto" || config::AudioBackend.get() == "android")
 				OptionCheckbox("Automatic Latency", config::AutoLatency,

@@ -354,7 +354,7 @@ void startSession(int localPort, int localPlayerNum)
 	// automatically disconnect clients after 3000 ms and start our count-down timer
 	// for disconnects after 1000 ms.   To completely disable disconnects, simply use
 	// a value of 0 for ggpo_set_disconnect_timeout.
-	ggpo_set_disconnect_timeout(ggpoSession, 3000);
+	ggpo_set_disconnect_timeout(ggpoSession, 0); // Disabled timeout, this way people can go into the settings menu online and end the GGPO Session
 	ggpo_set_disconnect_notify_start(ggpoSession, 1000);
 
 	ggpo::localPlayerNum = localPlayerNum;

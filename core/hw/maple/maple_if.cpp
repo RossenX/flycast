@@ -147,7 +147,7 @@ static void maple_DoDma()
 	}
 #endif
 
-	ggpo::getInput(maple_kcode);
+	ggpo::getInput(mapleInputState);
 
 	const bool swap_msb = (SB_MMSEL == 0);
 	u32 xfer_count=0;

@@ -81,60 +81,7 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 		else
 		{
 			// If this is GGPO set the digital controls instead
-			if(config::GGPOEnable){
-				switch (key)
-				{
-				case EMU_BTN_ESCAPE:
-					if (pressed)
-						dc_exit();
-					break;
-
-				case EMU_BTN_MENU:
-					if (pressed)
-						gui_open_settings();
-					break;
-
-				case EMU_BTN_FFORWARD:
-					if (pressed && !gui_is_open())
-						settings.input.fastForwardMode = !settings.input.fastForwardMode && !settings.online;
-					break;
-
-				case EMU_BTN_TRIGGER_LEFT:
-					if(pressed){kcode[port] &= ~DC_BTN_Z;
-					}else{kcode[port] |= DC_BTN_Z;}
-					break;
-
-				case EMU_BTN_TRIGGER_RIGHT:
-					if(pressed){kcode[port] &= ~DC_BTN_C;
-					}else{kcode[port] |= DC_BTN_C;}
-					break;
-
-				case EMU_BTN_ANA_UP:
-				if(pressed){kcode[port] &= ~DC_DPAD_UP;
-					}else{kcode[port] |= DC_DPAD_UP;}
-					break;
-
-				case EMU_BTN_ANA_DOWN:
-				if(pressed){kcode[port] &= ~DC_DPAD_DOWN;
-					}else{kcode[port] |= DC_DPAD_DOWN;}
-					break;
-
-				case EMU_BTN_ANA_LEFT:
-				if(pressed){kcode[port] &= ~DC_DPAD_LEFT;
-					}else{kcode[port] |= DC_DPAD_LEFT;}
-					break;
-
-				case EMU_BTN_ANA_RIGHT:
-				if(pressed){kcode[port] &= ~DC_DPAD_RIGHT;
-					}else{kcode[port] |= DC_DPAD_RIGHT;}
-					break;
-
-				default:
-					return false;
-				}
-
-			}else{
-				switch (key)
+			switch (key)
 			{
 			case EMU_BTN_ESCAPE:
 				if (pressed)
@@ -168,7 +115,6 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 				break;
 			default:
 				return false;
-			}
 			}
 			
 		}

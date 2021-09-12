@@ -372,30 +372,6 @@ extern Option<int> AudioVolume;
 
 extern OptionString AudioBackend;
 
-class AudioVolumeOption : public Option<int> {
-public:
-	AudioVolumeOption() : Option<int>("aica.Volume", 100) {};
-	float logarithmic_volume_scale = 1.0;
-
-	void load() override {
-		Option<int>::load();
-		calcDbPower();
-	}
-
-	float dbPower()
-	{
-		return logarithmic_volume_scale;
-	}
-	void calcDbPower()
-	{
-		// dB scaling calculation: https://www.dr-lex.be/info-stuff/volumecontrols.html
-		logarithmic_volume_scale = fmin(exp(4.605 * float(value) / 100.0) / 100.0, 1.0);
-		if (value < 10)
-			logarithmic_volume_scale *= value / 10.0;
-	}
-};
-extern AudioVolumeOption AudioVolume;
-
 // Rendering
 
 class RendererOption : public Option<RenderType> {

@@ -58,8 +58,6 @@ Option<bool> AutoLatency("aica.AutoLatency",
 		);
 
 OptionString AudioBackend("backend", "auto", "audio");
-AudioVolumeOption AudioVolume;
-
 // Rendering
 
 RendererOption RendererType;

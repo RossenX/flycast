@@ -145,10 +145,20 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 bool GamepadDevice::gamepad_axis_input(int code, int value)
 {
 
+	if (input_mapper->get_axis_inverted(0, code)) value *= -1;
+
 	s32 v; // The final Value
-	if(code > 3){v = value / 128; // Should make a value between 0-256
-	}else{v = value / 256; // Should make a value between 0-128
+	if(code > 3){
+		v = value / 128; // Should make a value between 0-256
+		if(v < 0) v = 0;
+		if(v > 255) v = 255;
+	}else{
+		v = value / 256; // Should make a value between 0-128
+		if(v < -128) v = -128;
+		if(v > 127) v = 127;
+		
 	}
+	
 	
 	NOTICE_LOG(INPUT,"Code: %d | %d | %d",code,value,v);
 

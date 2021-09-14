@@ -55,6 +55,29 @@ button_list[] =
 	{ EMU_BTN_ANA_LEFT, "compat", "btn_analog_left" },
 	{ EMU_BTN_ANA_RIGHT, "compat", "btn_analog_right" },
 	{ DC_BTN_RELOAD, "dreamcast", "reload" },
+
+	// Macros Naomi
+	{ BC_03, "compat", "BC_03" },
+	{ BC_14, "compat", "BC_14" },
+	{ BC_25, "compat", "BC_25" },
+	{ BC_01, "compat", "BC_01" },
+	{ BC_12, "compat", "BC_12" },
+	{ BC_34, "compat", "BC_34" },
+	{ BC_45, "compat", "BC_45" },
+	{ BC_012, "compat", "BC_012" },
+	{ BC_345, "compat", "BC_345" },
+
+	// Macros Dreamcast
+	{ BC_XA, "compat", "BC_XA" },
+	{ BC_YB, "compat", "BC_YB" },
+	{ BC_LR, "compat", "BC_LR" },
+	{ BC_XY, "compat", "BC_XY" },
+	{ BC_YL, "compat", "BC_YL" },
+	{ BC_AB, "compat", "BC_AB" },
+	{ BC_BR, "compat", "BC_BR" },
+	{ BC_XYL, "compat", "BC_XYL" },
+	{ BC_ABR, "compat", "BC_ABR" }
+
 };
 
 static struct
@@ -92,7 +115,30 @@ axis_list[] =
 	{ EMU_AXIS_DPAD2_LEFT, "compat", "axis_dpad2_left", "compat", "axis_dpad2_left_inverted" },
 	{ EMU_AXIS_DPAD2_RIGHT, "compat", "axis_dpad2_right", "compat", "axis_dpad2_right_inverted" },
 	{ EMU_AXIS_DPAD2_UP, "compat", "axis_dpad2_up", "compat", "axis_dpad2_up_inverted" },
-	{ EMU_AXIS_DPAD2_DOWN, "compat", "axis_dpad2_down", "compat", "axis_dpad2_down_inverted" }
+	{ EMU_AXIS_DPAD2_DOWN, "compat", "axis_dpad2_down", "compat", "axis_dpad2_down_inverted" },
+
+	// Macros Naomi
+	{ AXIS_BC_03, "compat", "axis_BC_03","compat", "axis_BC_03_inverted" },
+	{ AXIS_BC_14, "compat", "axis_BC_14","compat", "axis_BC_14_inverted" },
+	{ AXIS_BC_25, "compat", "axis_BC_25","compat", "axis_BC_25_inverted" },
+	{ AXIS_BC_01, "compat", "axis_BC_01","compat", "axis_BC_01_inverted" },
+	{ AXIS_BC_12, "compat", "axis_BC_12","compat", "axis_BC_12_inverted" },
+	{ AXIS_BC_34, "compat", "axis_BC_34","compat", "axis_BC_34_inverted" },
+	{ AXIS_BC_45, "compat", "axis_BC_45","compat", "axis_BC_45_inverted" },
+	{ AXIS_BC_012, "compat", "axis_BC_012","compat", "axis_BC_012_inverted" },
+	{ AXIS_BC_345, "compat", "axis_BC_345","compat", "axis_BC_345_inverted" },
+
+	// Macros Dreamcast
+	{ AXIS_BC_XA, "compat", "axis_BC_XA","compat", "axis_BC_XA_inverted" },
+	{ AXIS_BC_YB, "compat", "axis_BC_YB","compat", "axis_BC_YB_inverted" },
+	{ AXIS_BC_LR, "compat", "axis_BC_LR","compat", "axis_BC_LR_inverted" },
+	{ AXIS_BC_XY, "compat", "axis_BC_XY","compat", "axis_BC_XY_inverted" },
+	{ AXIS_BC_YL, "compat", "axis_BC_YL","compat", "axis_BC_YL_inverted" },
+	{ AXIS_BC_AB, "compat", "axis_BC_AB","compat", "axis_BC_AB_inverted" },
+	{ AXIS_BC_BR, "compat", "axis_BC_BR","compat", "axis_BC_BR_inverted" },
+	{ AXIS_BC_XYL, "compat", "axis_BC_XYL","compat", "axis_BC_XYL_inverted" },
+	{ AXIS_BC_ABR, "compat", "axis_BC_ABR","compat", "axis_BC_ABR_inverted" }
+
 };
 
 std::map<std::string, std::shared_ptr<InputMapping>> InputMapping::loaded_mappings;

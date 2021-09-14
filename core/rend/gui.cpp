@@ -610,37 +610,51 @@ const DreamcastKey button_keys[] = {
 		EMU_BTN_MENU, EMU_BTN_ESCAPE, EMU_BTN_FFORWARD, EMU_BTN_TRIGGER_LEFT, EMU_BTN_TRIGGER_RIGHT,
 		DC_BTN_C, DC_BTN_D, DC_BTN_Z, DC_DPAD2_UP, DC_DPAD2_DOWN, DC_DPAD2_LEFT, DC_DPAD2_RIGHT,
 		DC_BTN_RELOAD,
-		EMU_BTN_ANA_UP, EMU_BTN_ANA_DOWN, EMU_BTN_ANA_LEFT, EMU_BTN_ANA_RIGHT
+		EMU_BTN_ANA_UP, EMU_BTN_ANA_DOWN, EMU_BTN_ANA_LEFT, EMU_BTN_ANA_RIGHT,
+		BC_03,BC_14,BC_25,BC_01,BC_12,BC_34,BC_45,BC_012,BC_345,
+		BC_XA,BC_YB,BC_LR,BC_XY,BC_YL,BC_AB,BC_BR,BC_XYL,BC_ABR
 };
 const char *button_names[] = {
 		"Start", "A", "B", "X", "Y", "DPad Up", "DPad Down", "DPad Left", "DPad Right",
 		"Menu", "Exit", "Fast-forward", "Left Trigger", "Right Trigger",
 		"C", "D", "Z", "Right Dpad Up", "Right DPad Down", "Right DPad Left", "Right DPad Right",
 		"Reload",
-		"Left Stick Up", "Left Stick Down", "Left Stick Left", "Left Stick Right"
+		"Left Stick Up", "Left Stick Down", "Left Stick Left", "Left Stick Right",
+		"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A", // Naomi Macros
+		"X + A","Y + B","L + R","X + Y","Y + L","A + B","B + R","X + Y + L","A + B + R" // Naomi Macros
 };
 const char *arcade_button_names[] = {
 		"Start", "Button 1", "Button 2", "Button 3", "Button 4", "Up", "Down", "Left", "Right",
 		"Menu", "Exit", "Fast-forward", "N/A", "N/A",
 		"Service", "Coin", "Test", "Button 5", "Button 6", "Button 7", "Button 8",
 		"Reload",
-		"N/A", "N/A", "N/A", "N/A"
+		"N/A", "N/A", "N/A", "N/A",
+		"1 + 4","2 + 5","3 + 6","1 + 2","2 + 3","4 + 5","5 + 6","1 + 2 + 3","4 + 5 + 6", // Naomi Macros
+		"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A" // Dreamcast macros
 };
+
 const DreamcastKey axis_keys[] = {
 		DC_AXIS_X, DC_AXIS_Y, DC_AXIS_LT, DC_AXIS_RT, DC_AXIS_X2, DC_AXIS_Y2, EMU_AXIS_DPAD1_X, EMU_AXIS_DPAD1_Y,
 		EMU_AXIS_DPAD2_X, EMU_AXIS_DPAD2_Y, EMU_AXIS_BTN_START, EMU_AXIS_BTN_A, EMU_AXIS_BTN_B, EMU_AXIS_BTN_X, EMU_AXIS_BTN_Y,
-		EMU_AXIS_BTN_C, EMU_AXIS_BTN_D, EMU_AXIS_BTN_Z, EMU_AXIS_DPAD2_UP, EMU_AXIS_DPAD2_DOWN, EMU_AXIS_DPAD2_LEFT, EMU_AXIS_DPAD2_RIGHT
+		EMU_AXIS_BTN_C, EMU_AXIS_BTN_D, EMU_AXIS_BTN_Z, EMU_AXIS_DPAD2_UP, EMU_AXIS_DPAD2_DOWN, EMU_AXIS_DPAD2_LEFT, EMU_AXIS_DPAD2_RIGHT,
+		AXIS_BC_03,AXIS_BC_14,AXIS_BC_25,AXIS_BC_01,AXIS_BC_12,AXIS_BC_34,AXIS_BC_45,AXIS_BC_012,AXIS_BC_345,
+		AXIS_BC_XA,AXIS_BC_YB,AXIS_BC_LR,AXIS_BC_XY,AXIS_BC_YL,AXIS_BC_AB,AXIS_BC_BR,AXIS_BC_XYL,AXIS_BC_ABR
 };
 const char *axis_names[] = {
 		"Left Stick X", "Left Stick Y", "Left Trigger", "Right Trigger", "Right Stick X", "Right Stick Y", "DPad X", "DPad Y",
 		"Right DPad X", "Right DPad Y", "Start", "A", "B", "X", "Y",
-		"C", "D", "Z", "N/A", "N/A", "N/A", "N/A"
+		"C", "D", "Z", "N/A", "N/A", "N/A", "N/A",
+		"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A", // Naomi Macros
+		"X + A","Y + B","L + R","X + Y","Y + L","A + B","B + R","X + Y + L","A + B + R" // Naomi Macros
 };
 const char *arcade_axis_names[] = {
 		"Left Stick X", "Left Stick Y", "Left Trigger", "Right Trigger", "Right Stick X", "Right Stick Y", "DPad X", "DPad Y",
 		"Right DPad X", "Right DPad Y", "Start", "Button 1", "Button 2", "Button 3", "Button 4",
-		"Service", "Coin", "Test", "Button 5", "Button 6", "Button 7", "Button 8"
+		"Service", "Coin", "Test", "Button 5", "Button 6", "Button 7", "Button 8",
+		"1 + 4","2 + 5","3 + 6","1 + 2","2 + 3","4 + 5","5 + 6","1 + 2 + 3","4 + 5 + 6", // Naomi Macros
+		"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A" // Dreamcast macros
 };
+
 static_assert(ARRAY_SIZE(button_keys) == ARRAY_SIZE(button_names), "invalid size");
 static_assert(ARRAY_SIZE(button_keys) == ARRAY_SIZE(arcade_button_names), "invalid size");
 static_assert(ARRAY_SIZE(axis_keys) == ARRAY_SIZE(axis_names), "invalid size");
@@ -820,6 +834,7 @@ static void controller_mapping_popup(const std::shared_ptr<GamepadDevice>& gamep
 				else
 					ImGui::Text("[%d]", code);
 			}
+
 			ImGui::NextColumn();
 			if (ImGui::Button("Map"))
 			{
@@ -839,6 +854,7 @@ static void controller_mapping_popup(const std::shared_ptr<GamepadDevice>& gamep
 				input_mapping = gamepad->get_input_mapping();
 				input_mapping->clear_button(gamepad_port, button_keys[j], j);
 			}
+			
 			ImGui::NextColumn();
 			ImGui::PopID();
 		}
@@ -860,6 +876,7 @@ static void controller_mapping_popup(const std::shared_ptr<GamepadDevice>& gamep
 
 		for (u32 j = 0; j < ARRAY_SIZE(axis_keys); j++)
 		{
+			
 			sprintf(key_id, "axis_id%d", j);
 			ImGui::PushID(key_id);
 

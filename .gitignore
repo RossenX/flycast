@@ -49,3 +49,5 @@ generated
 # JetBrains IDES
 .idea/
 cmake-build-*/
+.vscode/settings.json
+.vscode/c_cpp_properties.json

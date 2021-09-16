@@ -450,7 +450,12 @@ void getInput(MapleInputState inputState[4])
 	u32 inputSize = sizeof(u32) + config::GGPOAnalogAxes;
 	std::vector<u8> inputs(inputSize * MAX_PLAYERS);
 	// should not call any callback
-	ggpo_synchronize_input(ggpoSession, (void *)&inputs[0], inputs.size(), nullptr);
+	GGPOErrorCode error = ggpo_synchronize_input(ggpoSession, (void *)&inputs[0], inputs.size(), nullptr);
+	if (error != GGPO_OK)
+	{
+		stopSession();
+		throw FlycastException("GGPO error");
+	}
 
 	for (int player = 0; player < MAX_PLAYERS; player++)
 	{
@@ -486,15 +491,18 @@ bool nextFrame()
 	if (ggpoSession == nullptr)
 		return false;
 	// will call save_game_state
-	ggpo_advance_frame(ggpoSession);
-	// may rollback
-	ggpo_idle(ggpoSession, 0);
+	GGPOErrorCode error = ggpo_advance_frame(ggpoSession);
 
-	GGPONetworkStats stats;
-	ggpo_get_network_stats(ggpoSession, remotePlayer, &stats);
-	// Try to stabalize the clients and keep them in sync so predictions don't skyrocket
-	if((stats.sync.predicted_frames-1) > (stats.network.ping / 16.7)){
-		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	// may rollback
+	if (error == GGPO_OK)
+		error = ggpo_idle(ggpoSession, 0);
+	if (error != GGPO_OK)
+	{
+		stopSession();
+		if (error == GGPO_ERRORCODE_INPUT_SIZE_DIFF)
+			throw FlycastException("GGPO analog settings are different from peer");
+		else if (error != GGPO_OK)
+			throw FlycastException("GGPO error");
 	}
 
 	// may call save_game_state
@@ -526,8 +534,7 @@ bool nextFrame()
 		WARN_LOG(NETWORK, "ggpo_add_local_input failed %d", result);
 		if (result != GGPO_ERRORCODE_PREDICTION_THRESHOLD)
 		{
-			ggpo_close_session(ggpoSession);
-			ggpoSession = nullptr;
+			stopSession();
 			throw FlycastException("GGPO error");
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));

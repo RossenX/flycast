@@ -776,6 +776,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
 #endif
 
+	SDL_Quit();
 	return 0;
 }
 

@@ -49,6 +49,10 @@ static void sdl_open_joystick(int index)
 		INFO_LOG(INPUT, "SDL: Cannot open joystick %d", index + 1);
 		return;
 	}
+	char guid[64];
+	SDL_JoystickGetGUIDString(SDL_JoystickGetDeviceGUID(index),guid, sizeof (guid));
+	NOTICE_LOG(INPUT,"Opened GUID: %s",guid);
+
 	std::shared_ptr<SDLGamepad> gamepad = std::make_shared<SDLGamepad>(index < MAPLE_PORTS ? index : -1, index, pJoystick);
 	SDLGamepad::AddSDLGamepad(gamepad);
 }
@@ -146,18 +150,12 @@ static void checkRawInput()
 
 void input_sdl_init()
 {
+	SDL_SetHint(SDL_HINT_XINPUT_ENABLED, "0");
+
 	if (SDL_WasInit(SDL_INIT_GAMECONTROLLER) == 0)
 	{
 		// We want joystick events even if we loose focus
 		SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
-#ifdef _WIN32
-		if (cfgLoadBool("input", "DisableXInput", false))
-		{
-			// Disable XInput for some old joysticks
-			NOTICE_LOG(INPUT, "Disabling XInput, using DirectInput");
-			SDL_SetHint(SDL_HINT_XINPUT_ENABLED, "0");
-		}
-#endif
 		if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) < 0)
 			die("SDL: error initializing Joystick subsystem");
 		
@@ -175,7 +173,12 @@ void input_sdl_init()
 		/**/
 		// Load any database that exist inthe same folder as flycast
 		SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+		SDL_GameControllerAddMappingsFromFile("../gamecontrollerdb.txt");
+		SDL_GameControllerAddMappingsFromFile("../../gamecontrollerdb.txt");
+
 		SDL_GameControllerAddMappingsFromFile("bearcontrollerdb.txt");
+		SDL_GameControllerAddMappingsFromFile("../bearcontrollerdb.txt");
+		SDL_GameControllerAddMappingsFromFile("../../bearcontrollerdb.txt");
 		NOTICE_LOG(INPUT,"Loaded BEAR Mapping File: %d", SDL_GameControllerNumMappings());
 
 	}

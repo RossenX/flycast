@@ -4,7 +4,7 @@
 		{
 			"type": "cppbuild",
 			"label": "C/C++: mingw32-make.exe build active file",
-			"command": "D:\\Program Files\\msys64\\mingw64\\bin\\mingw32-make.exe",
+			"command": "D:\\msys64\\mingw64\\bin\\mingw32-make.exe",
 			"args": [
 				"-j",
 				"8",
@@ -21,7 +21,7 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"detail": "compiler: \"D:\\Program Files\\msys64\\mingw64\\bin\\mingw32-make.exe\""
+			"detail": "compiler: \"D:\\msys64\\mingw64\\bin\\mingw32-make.exe\""
 		}
 	]
 }

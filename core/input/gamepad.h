@@ -114,7 +114,7 @@ enum DreamcastKey
 	AXIS_BC_25 = 0x40000 | (DC_BTN_X | DC_DPAD2_DOWN),						// 3+6
 	AXIS_BC_01 = 0x40000 | (DC_BTN_A | DC_BTN_B),                          // 1+2
 	AXIS_BC_12 = 0x40000 | (DC_BTN_B | DC_BTN_X),							// 2+3
-	AXIS_BC_34 = 0x40000 | (DC_BTN_X | DC_DPAD2_UP),						// 4+5
+	AXIS_BC_34 = 0x40000 | (DC_BTN_Y | DC_DPAD2_UP),						// 4+5
 	AXIS_BC_45 = 0x40000 | (DC_DPAD2_UP | DC_DPAD2_DOWN),					// 5+6
 	AXIS_BC_012 = 0x40000 | (DC_BTN_A | DC_BTN_B | DC_BTN_X),				// 1+2+3
 	AXIS_BC_345 = 0x40000 | (DC_BTN_Y | DC_DPAD2_UP | DC_DPAD2_DOWN),		// 4+5+6

@@ -87,6 +87,9 @@ void dc_term()
 
 void dc_savestate(int index)
 {
+	// Nope
+	if(config::GGPOEnable){return;}
+	
 	unsigned int total_size = 0;
 	void *data = nullptr;
 

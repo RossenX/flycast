@@ -181,7 +181,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value)
 			if (v >= 64)
 				kcode[port] |= key;
 			else if (v < 64)
-				kcode[port] |= ~key;
+				kcode[port] |= key | (key << 1);
 
 			}else{
 				kcode[port] |= key | (key << 1);
@@ -198,29 +198,13 @@ bool GamepadDevice::gamepad_axis_input(int code, int value)
 			if(v < 0){v=0;}
 			if(v > 255){v=255;}
 			
-			if(config::GGPOEnable){ // If this is GGPO the digital controls instead
-
-				if (key == DC_AXIS_LT){
-					if(v > 64){kcode[port] &= ~DC_BTN_Z;
-					}else{kcode[port] |= DC_BTN_Z;}
-
-				}else if (key == DC_AXIS_RT){
-					if(v > 64){kcode[port] &= ~DC_BTN_C;
-					}else{kcode[port] |= DC_BTN_C;}
-
-				}else{return false;}
-				
-			}else
-			{
-				if (key == DC_AXIS_LT){
+			if (key == DC_AXIS_LT){
 					lt[port] = (u8)v;
 					NOTICE_LOG(INPUT, "LT: %d", lt[port]);
 				}else if (key == DC_AXIS_RT){
 					rt[port] = (u8)v;
 					NOTICE_LOG(INPUT, "RT: %d", rt[port]);
 				}else{return false;}
-
-			}
 			
 		}
 		else if (((int)key >> 16) == 2) // Analog axes

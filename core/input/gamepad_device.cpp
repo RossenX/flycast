@@ -33,6 +33,8 @@
 
 // Gamepads
 u32 kcode[4] = { ~0u, ~0u, ~0u, ~0u };
+u32 kcode_lastframe[4] = { ~0u, ~0u, ~0u, ~0u };
+u32 kcode_nextframe[4] = { ~0u, ~0u, ~0u, ~0u };
 s8 joyx[4];
 s8 joyy[4];
 s8 joyrx[4];
@@ -47,6 +49,94 @@ std::mutex GamepadDevice::_gamepads_mutex;
 #include "hw/sh4/sh4_sched.h"
 static FILE *record_input;
 #endif
+
+void GamepadDevice::gamepad_btn_reset(){
+	kcode[_maple_port] |= 0xFFFFFF;
+	joyx[_maple_port] = 0;
+ 	joyy[_maple_port] = 0;
+ 	joyrx[_maple_port] = 0;
+ 	joyry[_maple_port] = 0;
+ 	rt[_maple_port] = 0;
+ 	lt[_maple_port] = 0;
+}
+
+void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, does it work? also yes. Might clean up later make pretty or optimize
+	
+	kcode[_maple_port] &= kcode_nextframe[_maple_port];
+	kcode_nextframe[_maple_port] = ~0u;
+
+	u32 UP = DC_DPAD_UP;
+	u32 DOWN = DC_DPAD_DOWN;
+	u32 LEFT = DC_DPAD_LEFT;
+	u32 RIGHT = DC_DPAD_RIGHT;
+
+	u32 _UP = DC_DPAD_UP|EMU_AXIS_DPAD_UP;
+	u32 _DOWN = DC_DPAD_DOWN|EMU_AXIS_DPAD_DOWN;
+	u32 _LEFT = DC_DPAD_LEFT|EMU_AXIS_DPAD_LEFT;
+	u32 _RIGHT = DC_DPAD_RIGHT|EMU_AXIS_DPAD_RIGHT;
+
+	// DOWN LEFT
+	if ((kcode[_maple_port] & (DOWN | LEFT)) == 0) {
+		if ((kcode_lastframe[_maple_port] & (DOWN | RIGHT))==0) {
+			kcode[_maple_port] |= _LEFT;
+			kcode_nextframe[_maple_port] &= ~_DOWN;
+			NOTICE_LOG(INPUT,"DOWN RIGHT > DOWN LEFT");
+		} else if ((kcode_lastframe[_maple_port] & (UP | LEFT))==0) {
+			kcode[_maple_port] |= _DOWN;
+			kcode_nextframe[_maple_port] &= ~_LEFT;
+			NOTICE_LOG(INPUT,"UP LEFT > DOWN LEFT");
+		}
+
+	} // DOWN RIGHT
+	else if ((kcode[_maple_port] & (DOWN | RIGHT))==0) {
+
+		if ((kcode_lastframe[_maple_port] & (DOWN | LEFT))==0) {
+			kcode[_maple_port] |= _RIGHT;
+			kcode_nextframe[_maple_port] &= ~_DOWN;
+			NOTICE_LOG(INPUT,"DOWN LEFT > DOWN RIGHT");
+		}else if ((kcode_lastframe[_maple_port] & (UP | RIGHT))==0) {
+			kcode[_maple_port] |= _DOWN;
+			kcode_nextframe[_maple_port] &= ~_RIGHT;
+			NOTICE_LOG(INPUT,"UP RIGHT > DOWN RIGHT");
+		}
+
+	} // UP LEFT
+	else if ((kcode[_maple_port] & (UP | LEFT))==0) {
+
+		if ((kcode_lastframe[_maple_port] & (UP | RIGHT))==0) {
+			kcode[_maple_port] |= LEFT;
+			kcode_nextframe[_maple_port] &= ~_UP;
+			NOTICE_LOG(INPUT,"UP RIGHT > UP LEFT");
+		}else if ((kcode_lastframe[_maple_port] & (DOWN | LEFT))==0) {
+			kcode[_maple_port] |= _UP;
+			kcode_nextframe[_maple_port] &= ~_LEFT;
+			NOTICE_LOG(INPUT,"DOWN LEFT > UP LEFT");
+		}
+
+	} // UP RIGHT
+	else if ((kcode[_maple_port] & (UP | RIGHT))==0) {
+		if ((kcode_lastframe[_maple_port] & (UP | LEFT))==0) {
+			kcode[_maple_port] |= _RIGHT;
+			kcode_nextframe[_maple_port] &= ~_UP;
+			NOTICE_LOG(INPUT,"UP LEFT > UP RIGHT");
+		}else if ((kcode_lastframe[_maple_port] & (DOWN | RIGHT))==0) {
+			kcode[_maple_port] |= _UP;
+			kcode_nextframe[_maple_port] &= ~_RIGHT;
+			NOTICE_LOG(INPUT,"DOWN RIGHT > UP RIGHT");
+		}
+	}
+
+	// Cancel out left/right
+	if ((kcode[_maple_port] & (LEFT | RIGHT)) == 0) {
+		kcode[_maple_port] |= (_LEFT|_RIGHT);
+		NOTICE_LOG(INPUT,"LEFT RIGHT CANCELED OUT");
+	}else if ((kcode[_maple_port] & (UP | DOWN)) == 0) {
+		kcode[_maple_port] |= (_UP|_DOWN);
+		NOTICE_LOG(INPUT,"UP DOWN CANCELED OUT");
+	}
+
+	memcpy(kcode_lastframe,kcode,sizeof(kcode));
+}
 
 bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 {
@@ -71,8 +161,10 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 			{
 				kcode[port] &= ~key;
 			}
-			else
-				kcode[port] |= key;
+			else{
+				if(gui_is_open()) kcode[port] |= key;
+			}
+				
 #ifdef TEST_AUTOMATION
 			if (record_input != NULL)
 				fprintf(record_input, "%ld button %x %04x\n", sh4_sched_now64(), port, kcode[port]);
@@ -159,9 +251,6 @@ bool GamepadDevice::gamepad_axis_input(int code, int value)
 		
 	}
 	
-	
-	NOTICE_LOG(INPUT,"Code: %d | %d | %d",code,value,v);
-
 	// This little bit looks to be for the keymapping
 	if (_input_detected != NULL && !_detecting_button && os_GetSeconds() >= _detection_start_time && (v >= 64 || v <= -64)){
 		_input_detected(code);
@@ -181,10 +270,10 @@ bool GamepadDevice::gamepad_axis_input(int code, int value)
 			if (v >= 64)
 				kcode[port] |= key;
 			else if (v < 64)
-				kcode[port] |= key | (key << 1);
+				if(gui_is_open()) kcode[port] |= key | (key << 1);
 
 			}else{
-				kcode[port] |= key | (key << 1);
+				if(gui_is_open()) kcode[port] |= key | (key << 1);
 			if (v <= -64)
 				kcode[port] &= ~key;
 			else if (v >= 64)
@@ -254,25 +343,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value)
 			}
 
 			else{
-				if(config::GGPOEnable){ // Translate the analog to digital for GGPO
-					if(key == DC_AXIS_X){
-						if(v > 0){kcode[port] &= ~DC_DPAD_RIGHT;}
-						if(v < 0){kcode[port] &= ~DC_DPAD_LEFT;}
-
-					}else if(key == DC_AXIS_Y){
-						if(v > 0){kcode[port] &= ~DC_DPAD_DOWN;}
-						if(v < 0){kcode[port] &= ~DC_DPAD_UP;}
-						
-					}else if(key == DC_AXIS_X2){
-						// Iono are these ever used
-					}else if(key == DC_AXIS_Y2){
-						// Iono are these ever used
-					}
-				}else{
-					*this_axis = (s8)v;
-				NOTICE_LOG(INPUT, "Axis: %d", v);
-				}
-				
+				*this_axis = (s8)v;
 			}
 			/**/
 		}
@@ -281,13 +352,13 @@ bool GamepadDevice::gamepad_axis_input(int code, int value)
 			if(code > 3){
 				
 				if (v < 64)
-				kcode[port] |=  (key & ~0x40000); // button released
+				if(gui_is_open()) kcode[port] |=  (key & ~0x40000); // button released
 			else if (v >= 64)
 				kcode[port] &= ~(key & ~0x40000); // button pressed
 
 			}else{
 				if (v <= -64)
-				kcode[port] |=  (key & ~0x40000); // button released
+				if(gui_is_open()) kcode[port] |=  (key & ~0x40000); // button released
 			else if (v >= 64)
 				kcode[port] &= ~(key & ~0x40000); // button pressed
 			}

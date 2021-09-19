@@ -210,10 +210,66 @@ inline void SDLMouse::setAbsPos(int x, int y) {
 		Mouse::setAbsPos(x, y, width, height);
 }
 
+void do_sdl()
+{
+	// Do SDL Stuff
+	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++)
+	{
+		std::shared_ptr<SDLGamepad> gamepad = SDLGamepad::GetSDLGamepad(i);
+		if(gamepad == NULL){continue;}
+		gamepad->gamepad_btn_reset();
+
+		// Axis check these first, becuase they can unset button.
+		for (int i = 0; i < 6; i++){
+			gamepad->gamepad_axis_input(i,SDL_GameControllerGetAxis(gamepad->sdl_joystick,(SDL_GameControllerAxis)i));
+		}
+
+		// Buttons
+		for (int i = 0; i < 22; i++){
+			if(SDL_GameControllerGetButton(gamepad->sdl_joystick,(SDL_GameControllerButton)i) != 0){
+				gamepad->gamepad_btn_input(i, true);
+			}
+		}
+	}
+
+	// Keyboard
+	const Uint8 *state = SDL_GetKeyboardState(NULL);
+	for (int i = 0; i < 512; i++)
+	{
+		if (state[i]) {
+    		sdl_keyboard->keyboard_input((SDL_Scancode)i,true);
+		}
+	}
+}
+
+void do_cleanup(){
+	// Do SDL Stuff
+	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++){
+		std::shared_ptr<SDLGamepad> gamepad = SDLGamepad::GetSDLGamepad(i);
+		if(gamepad == NULL){continue;}
+		gamepad->gamepad_btn_cleanup();
+		//NOTICE_LOG(INPUT,"Cleaned up: %d",i);
+	}
+}
+
+void do_clearInputs(){
+	// Do SDL Stuff
+	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++){
+		std::shared_ptr<SDLGamepad> gamepad = SDLGamepad::GetSDLGamepad(i);
+		if(gamepad == NULL){continue;}
+		gamepad->gamepad_btn_reset();
+	}
+}
+
 void input_sdl_handle()
 {
 	//NOTICE_LOG(INPUT, "Input Polled");
 	SDLGamepad::UpdateRumble();
+
+	if(!gui_is_open()){
+		do_sdl();
+		do_cleanup();
+	}
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -252,7 +308,7 @@ void input_sdl_handle()
 					}
 					else if (!config::UseRawInput)
 					{
-						sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN);
+						if(gui_is_open()) sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN);
 					}
 				}
 				break;
@@ -304,7 +360,7 @@ void input_sdl_handle()
 					if (device != NULL)
 						device->gamepad_axis_input(event.caxis.axis, event.caxis.value);
 					
-					NOTICE_LOG(INPUT,"Controller Axis Motion: %d %d", event.caxis.axis, event.caxis.value);
+					//NOTICE_LOG(INPUT,"Controller Axis Motion: %d %d", event.caxis.axis, event.caxis.value);
 				}
 				break;
 #if !defined(__APPLE__)
@@ -380,6 +436,7 @@ void input_sdl_handle()
 				break;
 		}
 	}
+	
 }
 
 void sdl_window_set_text(const char* text)

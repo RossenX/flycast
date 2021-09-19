@@ -102,6 +102,8 @@ public:
 class SDLGamepad : public GamepadDevice
 {
 public:
+	SDL_GameController* sdl_joystick;
+	
 	SDLGamepad(int maple_port, int joystick_idx, SDL_GameController* sdl_joystick)
 		: GamepadDevice(maple_port, "SDL"), sdl_joystick(sdl_joystick)
 	{
@@ -184,7 +186,7 @@ protected:
 	}
 
 private:
-	SDL_GameController* sdl_joystick;
+
 	SDL_JoystickID sdl_joystick_instance;
 	SDL_Haptic *sdl_haptic;
 	float vib_inclination = 0;

@@ -38,12 +38,6 @@ maple_device::~maple_device()
     delete config;
 }
 
-static inline void mutualExclusion(u32& keycode, u32 mask)
-{
-	if ((keycode & mask) == 0)
-		keycode |= mask;
-}
-
 /*
 	Sega Dreamcast Controller
 	No error checking of any kind, but works just fine
@@ -61,8 +55,6 @@ struct maple_sega_controller: maple_base
 
 	virtual u32 transform_kcode(u32 kcode)
 	{
-		mutualExclusion(kcode, DC_DPAD_UP | DC_DPAD_DOWN);
-		mutualExclusion(kcode, DC_DPAD_LEFT | DC_DPAD_RIGHT);
 		return kcode; // | 0xF901;		// mask off DPad2, C, D and Z;
 	}
 
@@ -200,8 +192,6 @@ struct maple_atomiswave_controller: maple_sega_controller
 
 	u32 transform_kcode(u32 kcode) override
 	{
-		mutualExclusion(kcode, AWAVE_UP_KEY | AWAVE_DOWN_KEY);
-		mutualExclusion(kcode, AWAVE_LEFT_KEY | AWAVE_RIGHT_KEY);
 		return kcode | AWAVE_TRIGGER_KEY;
 	}
 
@@ -229,10 +219,6 @@ struct maple_sega_twinstick: maple_sega_controller
 
 	u32 transform_kcode(u32 kcode) override
 	{
-		mutualExclusion(kcode, DC_DPAD_UP | DC_DPAD_DOWN);
-		mutualExclusion(kcode, DC_DPAD_LEFT | DC_DPAD_RIGHT);
-		mutualExclusion(kcode, DC_DPAD2_UP | DC_DPAD2_DOWN);
-		mutualExclusion(kcode, DC_DPAD2_LEFT | DC_DPAD2_RIGHT);
 		return kcode | 0x0101;
 	}
 
@@ -266,8 +252,6 @@ struct maple_ascii_stick: maple_sega_controller
 
 	u32 transform_kcode(u32 kcode) override
 	{
-		mutualExclusion(kcode, DC_DPAD_UP | DC_DPAD_DOWN);
-		mutualExclusion(kcode, DC_DPAD_LEFT | DC_DPAD_RIGHT);
 		return kcode | 0xF800;
 	}
 
@@ -1236,8 +1220,6 @@ struct maple_lightgun : maple_base
 {
 	virtual u32 transform_kcode(u32 kcode)
 	{
-		mutualExclusion(kcode, DC_DPAD_UP | DC_DPAD_DOWN);
-		mutualExclusion(kcode, DC_DPAD_LEFT | DC_DPAD_RIGHT);
 		if ((kcode & DC_BTN_RELOAD) == 0)
 			kcode &= ~DC_BTN_A;	// trigger
 		return kcode | 0xFF01;
@@ -1334,8 +1316,6 @@ struct maple_lightgun : maple_base
 struct atomiswave_lightgun : maple_lightgun
 {
 	u32 transform_kcode(u32 kcode) override {
-		mutualExclusion(kcode, AWAVE_UP_KEY | AWAVE_DOWN_KEY);
-		mutualExclusion(kcode, AWAVE_LEFT_KEY | AWAVE_RIGHT_KEY);
 		// No need for reload on AW
 		return (kcode & AWAVE_TRIGGER_KEY) == 0 ? ~AWAVE_BTN0_KEY : ~0;
 	}

@@ -358,9 +358,7 @@ void input_sdl_handle()
 				{
 					std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.caxis.which);
 					if (device != NULL)
-						device->gamepad_axis_input(event.caxis.axis, event.caxis.value);
-					
-					//NOTICE_LOG(INPUT,"Controller Axis Motion: %d %d", event.caxis.axis, event.caxis.value);
+						device->gamepad_axis_input(event.caxis.axis, event.caxis.value, true);
 				}
 				break;
 #if !defined(__APPLE__)

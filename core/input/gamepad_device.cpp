@@ -163,6 +163,19 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 			}
 			else{
 				if(gui_is_open()) kcode[port] |= key;
+
+				// Preserve Diagonals
+				switch (key){
+					case DC_DPAD_UP: case DC_DPAD_DOWN:
+					if(((kcode[port] & DC_DPAD_LEFT)==0) || ((kcode[port] & DC_DPAD_RIGHT)==0)){
+						kcode[port] &= ~key;
+					}
+
+					case DC_DPAD_LEFT: case DC_DPAD_RIGHT:
+					if(((kcode[port] & DC_DPAD_UP)==0) || ((kcode[port] & DC_DPAD_DOWN)==0)){
+						kcode[port] &= ~key;
+					}
+				}
 			}
 				
 #ifdef TEST_AUTOMATION
@@ -173,6 +186,8 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 		else
 		{
 			// If this is GGPO set the digital controls instead
+			int _joyx = 0;
+			int _joyy = 0;
 			switch (key)
 			{
 			case EMU_BTN_ESCAPE:
@@ -194,16 +209,16 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 				rt[port] = pressed ? 255 : 0;
 				break;
 			case EMU_BTN_ANA_UP:
-				joyy[port] = pressed ? -128 : 0;
+				joyy[port] -= pressed ? 128 : 0;
 				break;
 			case EMU_BTN_ANA_DOWN:
-				joyy[port] = pressed ? 127 : 0;
+				joyy[port] += pressed ? 127 : 0;
 				break;
 			case EMU_BTN_ANA_LEFT:
-				joyx[port] = pressed ? -128 : 0;
+				joyx[port] -= pressed ? 128 : 0;
 				break;
 			case EMU_BTN_ANA_RIGHT:
-				joyx[port] = pressed ? 127 : 0;
+				joyx[port] += pressed ? 127 : 0;
 				break;
 			default:
 				return false;
@@ -234,7 +249,7 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 	return rc;
 }
 
-bool GamepadDevice::gamepad_axis_input(int code, int value)
+bool GamepadDevice::gamepad_axis_input(int code, int value, bool isEvent)
 {
 
 	if (input_mapper->get_axis_inverted(0, code)) value *= -1;
@@ -274,10 +289,35 @@ bool GamepadDevice::gamepad_axis_input(int code, int value)
 
 			}else{
 				if(gui_is_open()) kcode[port] |= key | (key << 1);
-			if (v <= -64)
-				kcode[port] &= ~key;
-			else if (v >= 64)
-				kcode[port] &= ~(key << 1);
+				if (v <= -64){
+					kcode[port] &= ~key;
+				}
+				else if (v >= 64){
+					kcode[port] &= ~(key << 1);
+				}else{
+
+					switch (key)
+					{
+					case DC_DPAD_UP:
+					case DC_DPAD_DOWN:
+						if (((kcode[port] & DC_DPAD_LEFT) == 0) || ((kcode[port] & DC_DPAD_RIGHT) == 0))
+						{
+							if (v <= -64)
+								kcode[port] &= ~key;
+							else if (v >= 64)
+								kcode[port] &= ~(key << 1);
+						}
+					case DC_DPAD_LEFT:
+					case DC_DPAD_RIGHT:
+						if (((kcode[port] & DC_DPAD_UP) == 0) || ((kcode[port] & DC_DPAD_DOWN) == 0))
+						{
+							if (v <= -64)
+								kcode[port] &= ~key;
+							else if (v >= 64)
+								kcode[port] &= ~(key << 1);
+						}
+					}
+				}
 			}
 			
 

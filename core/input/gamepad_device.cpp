@@ -166,8 +166,9 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 	}else{InputsToUse = kcode;}
 
 	if (_input_detected != nullptr && _detecting_button
-			&& os_GetSeconds() >= _detection_start_time && pressed){
-		_input_detected(code);
+			&& os_GetSeconds() >= _detection_start_time && pressed)
+	{
+		_input_detected(code, false, false);
 		_input_detected = nullptr;
 		return true;
 	}
@@ -241,24 +242,30 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 				if (pressed && !gui_is_open())
 					settings.input.fastForwardMode = !settings.input.fastForwardMode && !settings.online;
 				break;
-			case EMU_BTN_TRIGGER_LEFT:
+			case DC_AXIS_LT:
 				lt[port] = pressed ? 255 : 0;
 				break;
-			case EMU_BTN_TRIGGER_RIGHT:
+			case DC_AXIS_RT:
 				rt[port] = pressed ? 255 : 0;
 				break;
-			case EMU_BTN_ANA_UP:
-				joyy[port] -= pressed ? 128 : 0;
+
+			case DC_AXIS_UP:
+			case DC_AXIS_DOWN:
+				buttonToAnalogInput<DC_AXIS_UP, DIGANA_UP, DIGANA_DOWN>(port, key, pressed, joyy[port]);
 				break;
-			case EMU_BTN_ANA_DOWN:
-				joyy[port] += pressed ? 127 : 0;
+			case DC_AXIS_LEFT:
+			case DC_AXIS_RIGHT:
+				buttonToAnalogInput<DC_AXIS_LEFT, DIGANA_LEFT, DIGANA_RIGHT>(port, key, pressed, joyx[port]);
 				break;
-			case EMU_BTN_ANA_LEFT:
-				joyx[port] -= pressed ? 128 : 0;
+			case DC_AXIS2_UP:
+			case DC_AXIS2_DOWN:
+				buttonToAnalogInput<DC_AXIS2_UP, DIGANA2_UP, DIGANA2_DOWN>(port, key, pressed, joyry[port]);
 				break;
-			case EMU_BTN_ANA_RIGHT:
-				joyx[port] += pressed ? 127 : 0;
+			case DC_AXIS2_LEFT:
+			case DC_AXIS2_RIGHT:
+				buttonToAnalogInput<DC_AXIS2_LEFT, DIGANA2_LEFT, DIGANA2_RIGHT>(port, key, pressed, joyrx[port]);
 				break;
+
 			default:
 				return false;
 			}
@@ -327,7 +334,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 	if(abs(JoyValues[code]) > abs(value) && isevent){IgnorePress = true;}
 	JoyValues[code] = value;
 
-	auto handle_axis = [&](u32 port, DreamcastKey key)
+	auto handle_axis = [&](u32 port, DreamcastKey key, int v)
 	{
 		if ((int)key < 0x10000) // Key Codes DIGITAL
 		{
@@ -399,28 +406,41 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 			}
 			
 		}
-		else if (((int)key >> 16) == 2) // Analog axes
+		else if ((key & DC_BTN_GROUP_MASK) == DC_AXIS_STICKS) // Analog axes
 		{
 			s8 *this_axis;
-			s8 *other_axis; // I don't think this is used anymore :thinking:
+			s8 *other_axis;
+			int axisDirection = -1;
 			switch (key)
 			{
-			case DC_AXIS_X:
+			case DC_AXIS_RIGHT:
+				axisDirection = 1;
+				//no break
+			case DC_AXIS_LEFT:
 				this_axis = &joyx[port];
 				other_axis = &joyy[port];
 				break;
 
-			case DC_AXIS_Y:
+			case DC_AXIS_DOWN:
+				axisDirection = 1;
+				//no break
+			case DC_AXIS_UP:
 				this_axis = &joyy[port];
 				other_axis = &joyx[port];
 				break;
 
-			case DC_AXIS_X2:
+			case DC_AXIS2_RIGHT:
+				axisDirection = 1;
+				//no break
+			case DC_AXIS2_LEFT:
 				this_axis = &joyrx[port];
 				other_axis = &joyry[port];
 				break;
 
-			case DC_AXIS_Y2:
+			case DC_AXIS2_DOWN:
+				axisDirection = 1;
+				//no break
+			case DC_AXIS2_UP:
 				this_axis = &joyry[port];
 				other_axis = &joyrx[port];
 				break;
@@ -432,7 +452,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 			if (abs(v) > _deadzone && !IgnorePress) *this_axis = (s8)v;
 			
 		}
-		else if (((int)key >> 16) == 4) // Map triggers to digital buttons
+		else if (key != EMU_BTN_NONE && key <= DC_BTN_RELOAD) // Map triggers to digital buttons
 		{
 			if (abs(v) >= _deadzone && !IgnorePress)
 				InputsToUse[port] &= ~(key & ~0x40000); // button pressed
@@ -448,39 +468,22 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 	{
 		for (u32 port = 0; port < 4; port++)
 		{
-			DreamcastKey key = input_mapper->get_axis_id(port, code);
-			rc = handle_axis(port, key) || rc;
+			DreamcastKey key = input_mapper->get_axis_id(port, code, !positive);
+			handle_axis(port, key, 0);
+			key = input_mapper->get_axis_id(port, code, positive);
+			rc = handle_axis(port, key, value) || rc;
 		}
 	}
 	else
 	{
-		DreamcastKey key = input_mapper->get_axis_id(0, code);
-		rc = handle_axis(_maple_port, key);
+		DreamcastKey key = input_mapper->get_axis_id(0, code, !positive);
+		// Reset opposite axis to 0
+		handle_axis(_maple_port, key, 0);
+		key = input_mapper->get_axis_id(0, code, positive);
+		rc = handle_axis(_maple_port, key, value);
 	}
 
 	return rc;
-}
-
-int GamepadDevice::get_axis_min_value(u32 axis) {
-	auto it = axis_min_values.find(axis);
-	if (it == axis_min_values.end()) {
-		load_axis_min_max(axis);
-		it = axis_min_values.find(axis);
-		if (it == axis_min_values.end())
-			return INT_MIN;
-	}
-	return it->second;
-}
-
-unsigned int GamepadDevice::get_axis_range(u32 axis) {
-	auto it = axis_ranges.find(axis);
-	if (it == axis_ranges.end()) {
-		load_axis_min_max(axis);
-		it = axis_ranges.find(axis);
-		if (it == axis_ranges.end())
-			return UINT_MAX;
-	}
-	return it->second;
 }
 
 std::string GamepadDevice::make_mapping_filename(bool instance)
@@ -512,11 +515,13 @@ void GamepadDevice::verify_or_create_system_mappings()
 
 	if (!file_exists(arcade_path))
 	{
+		resetMappingToDefault(true, true);
 		save_mapping(2);
 		input_mapper->ClearMappings();
 	}
 	if (!file_exists(dc_path))
 	{
+		resetMappingToDefault(false, false);
 		save_mapping(0);
 		input_mapper->ClearMappings();
 	}
@@ -641,6 +646,7 @@ void GamepadDevice::detect_btn_input(input_detected_cb button_pressed)
 {
 	_input_detected = button_pressed;
 	_detecting_button = true;
+	_detecting_axis = false;
 	_detection_start_time = os_GetSeconds() + 0.2;
 }
 
@@ -648,6 +654,15 @@ void GamepadDevice::detect_axis_input(input_detected_cb axis_moved)
 {
 	_input_detected = axis_moved;
 	_detecting_button = false;
+	_detecting_axis = true;
+	_detection_start_time = os_GetSeconds() + 0.2;
+}
+
+void GamepadDevice::detectButtonOrAxisInput(input_detected_cb input_changed)
+{
+	_input_detected = input_changed;
+	_detecting_button = true;
+	_detecting_axis = true;
 	_detection_start_time = os_GetSeconds() + 0.2;
 }
 

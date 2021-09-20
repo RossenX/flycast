@@ -469,7 +469,8 @@ static void gui_display_commands()
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 	}
-	if (ImGui::Button("Load State", ImVec2(110 * scaling, 50 * scaling)))
+	if(!config::GGPOEnable){
+		if (ImGui::Button("Load State", ImVec2(110 * scaling, 50 * scaling)))
 	{
 		gui_state = GuiState::Closed;
 		dc_loadstate(config::SavestateSlot);
@@ -499,6 +500,8 @@ static void gui_display_commands()
         ImGui::PopItemFlag();
         ImGui::PopStyleVar();
 	}
+	}
+	
 
 	ImGui::Columns(2, "buttons", false);
 	if (ImGui::Button("Settings", ImVec2(150 * scaling, 50 * scaling)))
@@ -511,25 +514,26 @@ static void gui_display_commands()
 		GamepadDevice::load_system_mappings();
 		gui_state = GuiState::Closed;
 	}
-
-	ImGui::NextColumn();
-	const char *disk_label = libGDR_GetDiscType() == Open ? "Insert Disk" : "Eject Disk";
-	if (ImGui::Button(disk_label, ImVec2(150 * scaling, 50 * scaling)))
-	{
-		if (libGDR_GetDiscType() == Open)
+	if(!config::GGPOEnable){
+		ImGui::NextColumn();
+		const char *disk_label = libGDR_GetDiscType() == Open ? "Insert Disk" : "Eject Disk";
+		if (ImGui::Button(disk_label, ImVec2(150 * scaling, 50 * scaling)))
 		{
-			gui_state = GuiState::SelectDisk;
+			if (libGDR_GetDiscType() == Open)
+			{
+				gui_state = GuiState::SelectDisk;
+			}
+			else
+			{
+				DiscOpenLid();
+				gui_state = GuiState::Closed;
+			}
 		}
-		else
+		ImGui::NextColumn();
+		if (ImGui::Button("Cheats", ImVec2(150 * scaling, 50 * scaling)))
 		{
-			DiscOpenLid();
-			gui_state = GuiState::Closed;
+			gui_state = GuiState::Cheats;
 		}
-	}
-	ImGui::NextColumn();
-	if (ImGui::Button("Cheats", ImVec2(150 * scaling, 50 * scaling)))
-	{
-		gui_state = GuiState::Cheats;
 	}
 	ImGui::Columns(1, nullptr, false);
 	if (ImGui::Button("Exit", ImVec2(300 * scaling + ImGui::GetStyle().ColumnsMinSpacing + ImGui::GetStyle().FramePadding.x * 2 - 1,

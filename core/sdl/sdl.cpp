@@ -38,6 +38,7 @@ static int window_width = WINDOW_WIDTH;
 static int window_height = WINDOW_HEIGHT;
 static bool gameRunning;
 static bool mouseCaptured;
+bool ShouldResize = false;
 
 static void sdl_open_joystick(int index)
 {
@@ -217,7 +218,6 @@ void do_sdl()
 	{
 		std::shared_ptr<SDLGamepad> gamepad = SDLGamepad::GetSDLGamepad(i);
 		if(gamepad == NULL){continue;}
-		gamepad->gamepad_btn_reset();
 
 		// Axis check these first, becuase they can unset button.
 		for (int i = 0; i < 6; i++){
@@ -254,8 +254,8 @@ void do_cleanup(){
 
 void do_clearInputs(){
 	// Do SDL Stuff
-	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++){
-		std::shared_ptr<SDLGamepad> gamepad = SDLGamepad::GetSDLGamepad(i);
+	for (int i = 0; i < GamepadDevice::GetGamepadCount() -1; i++){
+		std::shared_ptr<GamepadDevice> gamepad = GamepadDevice::GetGamepad(i);
 		if(gamepad == NULL){continue;}
 		gamepad->gamepad_btn_reset();
 	}
@@ -267,6 +267,7 @@ void input_sdl_handle()
 	//SDLGamepad::UpdateRumble(); Fuck Rumble
 
 	if(!gui_is_open()){
+		do_clearInputs();
 		do_sdl();
 	}
 
@@ -320,12 +321,7 @@ void input_sdl_handle()
 						|| event.window.event == SDL_WINDOWEVENT_MINIMIZED
 						|| event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
 				{
-#ifdef USE_VULKAN
-                	theVulkanContext.SetResized();
-#endif
-#ifdef _WIN32
-               		theDXContext.resize();
-#endif
+					ShouldResize = true;
 				}
 				else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
 				{

@@ -29,15 +29,25 @@
 bool mainui_enabled;
 u32 MainFrameCount;
 static bool forceReinit;
+extern bool ShouldResize;
 
 void UpdateInputState();
 
 bool mainui_rend_frame()
 {
 	os_DoEvents();
-	if(gui_is_open()){ // Otherwise we get no inputs in the UI
-		UpdateInputState();
+	if(gui_is_open())UpdateInputState();
+	
+	if(ShouldResize){
+		#ifdef USE_VULKAN
+            theVulkanContext.SetResized();
+		#endif
+		#ifdef _WIN32
+			theDXContext.resize();
+		#endif
+		ShouldResize = false;
 	}
+	
 	
 
 	if (gui_is_open() || gui_state == GuiState::VJoyEdit)

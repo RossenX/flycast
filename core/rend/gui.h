@@ -57,8 +57,7 @@ enum class GuiState {
 };
 extern GuiState gui_state;
 
-static inline bool gui_is_open()
-{
+static inline bool gui_is_open(){
 	return gui_state != GuiState::Closed && gui_state != GuiState::VJoyEdit;
 }
 static inline bool gui_is_content_browser()

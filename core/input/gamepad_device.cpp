@@ -147,7 +147,7 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 		_input_detected = nullptr;
 		return true;
 	}
-	if (!input_mapper || _maple_port < 0 || _maple_port > (int)ARRAY_SIZE(kcode))
+	if (!input_mapper || _maple_port < 0 || _maple_port > (int)ARRAY_SIZE(kcode) || gui_is_open())
 		return false;
 
 	auto handle_key = [&](u32 port, DreamcastKey key)
@@ -273,7 +273,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isEvent)
 		return true;
 	}
 
-	if (!input_mapper || _maple_port < 0 || _maple_port > 4) return false;
+	if (!input_mapper || _maple_port < 0 || _maple_port > 4 || gui_is_open()) return false;
 
 	auto handle_axis = [&](u32 port, DreamcastKey key)
 	{
@@ -379,21 +379,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isEvent)
 		}
 		else if (((int)key >> 16) == 4) // Map triggers to digital buttons
 		{
-			if(code > 3){
-				
-				if (v < 64)
-				if(gui_is_open()) kcode[port] |=  (key & ~0x40000); // button released
-			else if (v >= 64)
-				kcode[port] &= ~(key & ~0x40000); // button pressed
-
-			}else{
-				if (v <= -64)
-				if(gui_is_open()) kcode[port] |=  (key & ~0x40000); // button released
-			else if (v >= 64)
-				kcode[port] &= ~(key & ~0x40000); // button pressed
-			}
-			
-			
+			if (abs(v) >= 64)kcode[port] &= ~(key & ~0x40000); // button pressed
 		}
 		else
 			return false;

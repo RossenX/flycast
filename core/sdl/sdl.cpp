@@ -264,7 +264,7 @@ void do_clearInputs(){
 void input_sdl_handle()
 {
 	//NOTICE_LOG(INPUT, "Input Polled");
-	//SDLGamepad::UpdateRumble(); Fuck Rumble
+	SDLGamepad::UpdateRumble();
 
 	if(!gui_is_open()){
 		do_clearInputs();

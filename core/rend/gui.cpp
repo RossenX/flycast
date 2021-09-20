@@ -348,6 +348,7 @@ static void ImGui_Impl_NewFrame()
 	io.MouseDown[ImGuiMouseButton_Middle] = (mouseButtons & (1 << 2)) != 0;
 	io.MouseDown[3] = (mouseButtons & (1 << 3)) != 0;
 
+/* Disabled navigation of the menu with the controller, because... well if the controller is being mapped or whatnot it can be very buggy
 	io.NavInputs[ImGuiNavInput_Activate] = (kcode[0] & DC_BTN_A) == 0;
 	io.NavInputs[ImGuiNavInput_Cancel] = (kcode[0] & DC_BTN_B) == 0;
 	io.NavInputs[ImGuiNavInput_Input] = (kcode[0] & DC_BTN_X) == 0;
@@ -367,7 +368,7 @@ static void ImGui_Impl_NewFrame()
 	io.NavInputs[ImGuiNavInput_LStickDown] = joyy[0] > 0 ? (float)joyy[0] / 128.f : 0.f;
 	if (io.NavInputs[ImGuiNavInput_LStickDown] < 0.1f)
 		io.NavInputs[ImGuiNavInput_LStickDown] = 0.f;
-
+*/
 	ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.94f);
 }
 
@@ -501,8 +502,6 @@ static void gui_display_commands()
         ImGui::PopStyleVar();
 	}
 	}
-	
-
 	ImGui::Columns(2, "buttons", false);
 	if (ImGui::Button("Settings", ImVec2(150 * scaling, 50 * scaling)))
 	{
@@ -1049,7 +1048,7 @@ static void gui_display_settings()
     	}
        	SaveSettings();
     }
-	if (game_started)
+	if (game_started && !config::GGPOEnable)
 	{
 	    ImGui::SameLine();
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(16 * scaling, normal_padding.y));
@@ -1066,6 +1065,7 @@ static void gui_display_settings()
 		{
 			if (ImGui::Button("Make Game Config", ImVec2(0, 30 * scaling)))
 				config::Settings::instance().setPerGameConfig(true);
+			
 		}
 	    ImGui::PopStyleVar();
 	}
@@ -1364,6 +1364,8 @@ static void gui_display_settings()
 			ImGui::PopStyleVar();
 			ImGui::EndTabItem();
 		}
+		// Disable Video Settings in GGPO, they'll probably crash or desync.
+		if(!config::GGPOEnable){
 		if (ImGui::BeginTabItem("Video"))
 		{
 			int renderApi;
@@ -1594,6 +1596,12 @@ static void gui_display_settings()
 		    	config::RendererType = RenderType::DirectX9;
 		    	break;
 		    }
+		}
+		}else{
+			if (ImGui::BeginTabItem("Video")){
+				ImGui::Text("Video Settings Disabled During Netplay.");
+				ImGui::EndTabItem();
+			}
 		}
 		if (ImGui::BeginTabItem("Audio"))
 		{

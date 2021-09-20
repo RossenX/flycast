@@ -102,6 +102,7 @@ protected:
 	bool _rumble_enabled = true;
 
 private:
+	bool handleButtonInput(int port, DreamcastKey key, bool pressed);
 	std::string make_mapping_filename(bool instance = false);
 	std::string make_mapping_filename(bool instance, int system);
 

@@ -176,7 +176,7 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 	if (!input_mapper || _maple_port < 0 || _maple_port > (int)ARRAY_SIZE(kcode) || gui_is_open())
 		return false;
 
-	auto handle_key = [&](u32 port, DreamcastKey key)
+	if (key <= DC_BTN_RELOAD)
 	{
 		if (key == EMU_BTN_NONE)
 			return false;
@@ -219,11 +219,13 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 			}
 
 #ifdef TEST_AUTOMATION
-			if (record_input != NULL)
-				fprintf(record_input, "%ld button %x %04x\n", sh4_sched_now64(), port, kcode[port]);
+		if (record_input != NULL)
+			fprintf(record_input, "%ld button %x %04x\n", sh4_sched_now64(), port, kcode[port]);
 #endif
-		}
-		else
+	}
+	else
+	{
+		switch (key)
 		{
 			// If this is GGPO set the digital controls instead
 			int _joyx = 0;
@@ -249,33 +251,45 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 				rt[port] = pressed ? 255 : 0;
 				break;
 
-			case DC_AXIS_UP:
-			case DC_AXIS_DOWN:
-				buttonToAnalogInput<DC_AXIS_UP, DIGANA_UP, DIGANA_DOWN>(port, key, pressed, joyy[port]);
-				break;
-			case DC_AXIS_LEFT:
-			case DC_AXIS_RIGHT:
-				buttonToAnalogInput<DC_AXIS_LEFT, DIGANA_LEFT, DIGANA_RIGHT>(port, key, pressed, joyx[port]);
-				break;
-			case DC_AXIS2_UP:
-			case DC_AXIS2_DOWN:
-				buttonToAnalogInput<DC_AXIS2_UP, DIGANA2_UP, DIGANA2_DOWN>(port, key, pressed, joyry[port]);
-				break;
-			case DC_AXIS2_LEFT:
-			case DC_AXIS2_RIGHT:
-				buttonToAnalogInput<DC_AXIS2_LEFT, DIGANA2_LEFT, DIGANA2_RIGHT>(port, key, pressed, joyrx[port]);
-				break;
+		case DC_AXIS_UP:
+		case DC_AXIS_DOWN:
+			buttonToAnalogInput<DC_AXIS_UP, DIGANA_UP, DIGANA_DOWN>(port, key, pressed, joyy[port]);
+			break;
+		case DC_AXIS_LEFT:
+		case DC_AXIS_RIGHT:
+			buttonToAnalogInput<DC_AXIS_LEFT, DIGANA_LEFT, DIGANA_RIGHT>(port, key, pressed, joyx[port]);
+			break;
+		case DC_AXIS2_UP:
+		case DC_AXIS2_DOWN:
+			buttonToAnalogInput<DC_AXIS2_UP, DIGANA2_UP, DIGANA2_DOWN>(port, key, pressed, joyry[port]);
+			break;
+		case DC_AXIS2_LEFT:
+		case DC_AXIS2_RIGHT:
+			buttonToAnalogInput<DC_AXIS2_LEFT, DIGANA2_LEFT, DIGANA2_RIGHT>(port, key, pressed, joyrx[port]);
+			break;
 
 			default:
 				return false;
 			}
 			
 		}
+	}
+	DEBUG_LOG(INPUT, "%d: BUTTON %s %d. kcode=%x", port, pressed ? "down" : "up", key, kcode[port]);
 
-		DEBUG_LOG(INPUT, "%d: BUTTON %s %x -> %d. kcode=%x", port, pressed ? "down" : "up", code, key, kcode[port]);
+	return true;
+}
 
+bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
+{
+	if (_input_detected != nullptr && _detecting_button
+			&& os_GetSeconds() >= _detection_start_time && pressed)
+	{
+		_input_detected(code, false, false);
+		_input_detected = nullptr;
 		return true;
-	};
+	}
+	if (!input_mapper || _maple_port < 0 || _maple_port > (int)ARRAY_SIZE(kcode))
+		return false;
 
 	bool rc = false;
 	if (_maple_port == 4)
@@ -283,13 +297,13 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 		for (int port = 0; port < 4; port++)
 		{
 			DreamcastKey key = input_mapper->get_button_id(port, code);
-			rc = handle_key(port, key) || rc;
+			rc = handleButtonInput(port, key, pressed) || rc;
 		}
 	}
 	else
 	{
 		DreamcastKey key = input_mapper->get_button_id(0, code);
-		rc = handle_key(_maple_port, key);
+		rc = handleButtonInput(_maple_port, key, pressed);
 	}
 
 	return rc;

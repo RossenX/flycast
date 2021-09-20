@@ -264,11 +264,10 @@ void do_clearInputs(){
 void input_sdl_handle()
 {
 	//NOTICE_LOG(INPUT, "Input Polled");
-	SDLGamepad::UpdateRumble();
+	//SDLGamepad::UpdateRumble(); Fuck Rumble
 
 	if(!gui_is_open()){
 		do_sdl();
-		do_cleanup();
 	}
 
 	SDL_Event event;
@@ -435,6 +434,9 @@ void input_sdl_handle()
 		}
 	}
 	
+	if(!gui_is_open()){
+		do_cleanup();
+	}
 }
 
 void sdl_window_set_text(const char* text)

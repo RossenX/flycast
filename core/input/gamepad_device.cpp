@@ -289,6 +289,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isEvent)
 
 			}else{
 				if(gui_is_open()) kcode[port] |= key | (key << 1);
+				
 				if (v <= -64){
 					kcode[port] &= ~key;
 				}
@@ -369,17 +370,6 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isEvent)
 			if ((float)(v * v + *other_axis * *other_axis) < input_mapper->dead_zone * input_mapper->dead_zone * 128.f * 128.f){
 				*this_axis = 0;
 				*other_axis = 0;
-
-				if(config::GGPOEnable)
-				{
-					if(key == DC_AXIS_X){
-					kcode[port] |= DC_DPAD_LEFT;
-					kcode[port] |= DC_DPAD_RIGHT;
-					}else if(key == DC_AXIS_Y){
-						kcode[port] |= DC_DPAD_UP;
-						kcode[port] |= DC_DPAD_DOWN;
-						}else if(key == DC_AXIS_X2){}else if(key == DC_AXIS_Y2){}
-				}
 			}
 
 			else{

@@ -35,7 +35,10 @@ void UpdateInputState();
 bool mainui_rend_frame()
 {
 	os_DoEvents();
-	UpdateInputState();
+	if(gui_is_open()){ // Otherwise we get no inputs in the UI
+		UpdateInputState();
+	}
+	
 
 	if (gui_is_open() || gui_state == GuiState::VJoyEdit)
 	{

@@ -162,7 +162,8 @@ void gui_init()
 #if !(defined(_WIN32) || defined(__APPLE__) || defined(__SWITCH__)) || defined(TARGET_IPHONE)
     scaling = std::max(1.f, screen_dpi / 100.f * 0.75f);
 #endif
-    if (scaling > 1)
+
+	if(scaling > 1)
 		ImGui::GetStyle().ScaleAllSizes(scaling);
 
     static const ImWchar ranges[] =
@@ -1753,13 +1754,21 @@ static void gui_display_settings()
 		    			"Enable networking for supported Naomi games");
 		    	if (config::GGPOEnable)
 		    	{
-					OptionCheckbox("Play as Player 1", config::ActAsServer,
+					OptionCheckbox("Host Game? (Player 1)", config::ActAsServer,
 							"Deselect to play as player 2");
 					char server_name[256];
 					strcpy(server_name, config::NetworkServer.get().c_str());
 					ImGui::InputText("Peer", server_name, sizeof(server_name), ImGuiInputTextFlags_CharsNoBlank, nullptr, nullptr);
 					ImGui::SameLine();
 					ShowHelpMarker("Your peer IP address and optional port");
+
+					char Player1Name[256]; char Player2Name[256];
+					
+					strcpy(Player1Name, config::p1Name.get().c_str()); strcpy(Player2Name, config::p2Name.get().c_str());
+					
+					ImGui::InputText("P1 Name", Player1Name, sizeof(Player1Name), ImGuiInputTextFlags_CharsNoBlank, nullptr, nullptr);
+					ImGui::InputText("P2 Name", Player2Name, sizeof(Player2Name), ImGuiInputTextFlags_CharsNoBlank, nullptr, nullptr);
+
 					config::NetworkServer.set(server_name);
 					OptionSlider("Frame Delay", config::GGPODelay, 0, 20,
 						"Sets Frame Delay, advisable for sessions with ping >100 ms");
@@ -2283,6 +2292,8 @@ void gui_display_osd()
 	if (message.empty())
 		message = getFPSNotification();
 
+	
+
 	if (!message.empty() || config::FloatVMUs || crosshairsNeeded() || (ggpo::active() && config::NetworkStats))
 	{
 		ImGui_Impl_NewFrame();
@@ -2304,12 +2315,60 @@ void gui_display_osd()
 		if (config::FloatVMUs)
 			display_vmus();
 //		gui_plot_render_time(screen_width, screen_height);
-		if (ggpo::active() && config::NetworkStats)
+		if (ggpo::active() && config::NetworkStats){
 			ggpo::displayStats();
+		}
 
+		// Show even when not in GGPO, for local player.
+		PlayerNamesFrame();
+		
 		ImGui::Render();
 		ImGui_impl_RenderDrawData(ImGui::GetDrawData());
 	}
+}
+
+void PlayerNamesFrame(){
+
+	//ImGuiIO& io = ImGui::GetIO();
+	//float _scaling = (float)(io.DisplaySize.x / 1080);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.25,0),0,ImVec2(0.5,0.25));
+	ImGui::SetNextWindowSize(ImVec2(0, 26));
+	ImGui::SetNextWindowBgAlpha(0.5f);
+	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.557f, 0.268f, 0.965f, 0.5f));
+
+	char Player1Name[256]; char Player2Name[256];
+	strcpy(Player1Name, config::p1Name.get().c_str()); 
+	strcpy(Player2Name, config::p2Name.get().c_str());
+
+	ImGui::Begin("p1Name", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+
+	// Send Queue
+	
+	ImGui::Text("%s",Player1Name);
+
+	ImGui::End();
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar(2);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.75,0),0,ImVec2(0.5,0.25));
+	ImGui::SetNextWindowSize(ImVec2(0, 26));
+	ImGui::SetNextWindowBgAlpha(0.5f);
+	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.557f, 0.268f, 0.965f, 0.5f));
+
+	ImGui::Begin("p2Name", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+
+	// Send Queue
+	
+	ImGui::Text("%s",Player2Name);
+
+	ImGui::End();
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar(2);
 }
 
 void gui_open_onboarding()

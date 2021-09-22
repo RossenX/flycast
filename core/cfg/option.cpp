@@ -119,6 +119,9 @@ Option<bool> NetworkEnable("Enable", false, "network");
 Option<bool> ActAsServer("ActAsServer", false, "network");
 OptionString DNS("DNS", "46.101.91.123", "network");
 OptionString NetworkServer("server", "", "network");
+OptionString p1Name("p1Name", "Player 1", "network");
+OptionString p2Name("p2Name", "Local Player", "network");
+
 Option<bool> EmulateBBA("EmulateBBA", false, "network");
 Option<bool> GGPOEnable("GGPO", false, "network");
 Option<int> GGPODelay("GGPODelay", 0, "network");

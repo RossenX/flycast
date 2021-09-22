@@ -38,6 +38,7 @@ void gui_set_mouse_wheel(float delta);
 void gui_set_insets(int left, int right, int top, int bottom);
 void gui_stop_game(const std::string& message = "");
 void gui_start_game(const std::string& path);
+void PlayerNamesFrame();
 
 extern int screen_dpi;
 extern float scaling;

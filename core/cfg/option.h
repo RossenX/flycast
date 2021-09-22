@@ -370,6 +370,9 @@ extern Option<bool> AutoLatency;
 extern Option<bool> ForceMono;
 extern Option<int> AudioVolume;
 
+extern OptionString p1Name;
+extern OptionString p2Name;
+
 extern OptionString AudioBackend;
 
 // Rendering

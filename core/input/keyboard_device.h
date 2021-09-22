@@ -361,7 +361,7 @@ template <typename Keycode>
 class KeyboardDeviceTemplate : public KeyboardDevice
 {
 public:
-	virtual void keyboard_input(Keycode keycode, bool pressed, int modifier_keys = 0);
+	virtual void keyboard_input(Keycode keycode, bool pressed, int modifier_keys = 0,bool isevent = false);
 	virtual ~KeyboardDeviceTemplate() = default;
 
 protected:
@@ -397,7 +397,7 @@ static inline void setFlag(int& v, u32 bitmask, bool set)
 }
 
 template <typename Keycode>
-void KeyboardDeviceTemplate<Keycode>::keyboard_input(Keycode keycode, bool pressed, int modifier_keys)
+void KeyboardDeviceTemplate<Keycode>::keyboard_input(Keycode keycode, bool pressed, int modifier_keys,bool isevent)
 {
 	const int port = maple_port();
 	if (port < 0 || port > (int)ARRAY_SIZE(kb_key))
@@ -473,5 +473,5 @@ void KeyboardDeviceTemplate<Keycode>::keyboard_input(Keycode keycode, bool press
 			|| (settings.platform.system == DC_PLATFORM_DREAMCAST && config::MapleMainDevices[port] != MDT_Keyboard)
 			|| (settings.platform.system == DC_PLATFORM_NAOMI && settings.input.JammaSetup != JVS::Keyboard)
 			|| settings.platform.system == DC_PLATFORM_ATOMISWAVE)
-		gamepad_btn_input(dc_keycode, pressed);
+		gamepad_btn_input(dc_keycode, pressed, isevent);
 }

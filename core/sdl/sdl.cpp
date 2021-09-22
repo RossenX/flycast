@@ -254,6 +254,7 @@ void do_sdl()
     		sdl_keyboard->keyboard_input((SDL_Scancode)i,true);
 		}
 	}
+	sdl_keyboard->gamepad_btn_cleanup();
 }
 
 void SDL_InputThread() {
@@ -302,7 +303,7 @@ void SDL_InputThread() {
 					}
 					else if (!config::UseRawInput)
 					{
-						sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN);
+						sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN,0);
 					}
 				}
 				break;

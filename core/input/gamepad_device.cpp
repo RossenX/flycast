@@ -83,18 +83,18 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 	u32 _RIGHT = DC_DPAD_RIGHT|EMU_AXIS_DPAD_RIGHT;
 
 	if (((kcode[_maple_port]|kcode_events_temp2) & (LEFT | RIGHT)) == 0) {
-		kcode_events_temp2 |= (_LEFT|_RIGHT);
+		kcode_events_temp2 |= (_LEFT | _RIGHT);
 		NOTICE_LOG(INPUT,"Removed LEFT|RIGHT COMBO");
 	}else if (((kcode[_maple_port]|kcode_events_temp2) & (UP | DOWN)) == 0) {
-		kcode_events_temp2 |= (_UP|_DOWN);
+		kcode_events_temp2 |= (_UP | _DOWN);
 		NOTICE_LOG(INPUT,"Removed UP|DOWN COMBO");
 	}
 
 	if ((kcode[_maple_port] & (LEFT | RIGHT)) == 0) {
-		kcode[_maple_port] |= (_LEFT|_RIGHT);
+		kcode[_maple_port] |= (_LEFT | _RIGHT);
 		NOTICE_LOG(INPUT,"Removed LEFT|RIGHT kcode");
 	}else if ((kcode[_maple_port] & (UP | DOWN)) == 0) {
-		kcode[_maple_port] |= (_UP|_DOWN);
+		kcode[_maple_port] |= (_UP | _DOWN);
 		NOTICE_LOG(INPUT,"Removed LEFT|RIGHT kcode");
 	}
 
@@ -419,16 +419,8 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 				return false;
 			}
 			
-			if (abs(v) <= _deadzone)
-			{ // Square Gate
-				*this_axis = 0;
-				*other_axis = 0;
-			}
-			else
-			{
-				*this_axis = (s8)v;
-			}
-			/**/
+			if (abs(v) > _deadzone) *this_axis = (s8)v;
+			
 		}
 		else if (((int)key >> 16) == 4) // Map triggers to digital buttons
 		{

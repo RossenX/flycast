@@ -30,7 +30,7 @@ public:
 	InputMapping() = default;
 	InputMapping(const InputMapping& other) {
 		name = other.name;
-		dead_zone = other.dead_zone;
+		dead_zone = int((255 / 100) * other.dead_zone);
 		for (int port = 0; port < 4; port++)
 		{
 			buttons[port] = other.buttons[port];
@@ -40,7 +40,7 @@ public:
 	}
 
 	std::string name;
-	float dead_zone = 0.1f;
+	int dead_zone = 25;
 	int version = 2;
 
 	DreamcastKey get_button_id(u32 port, u32 code)
@@ -104,7 +104,7 @@ class IdentityInputMapping : public InputMapping
 public:
 	IdentityInputMapping() {
 		name = "Default";
-		dead_zone = 0.1f;
+		dead_zone = 25;
 		
 		for (int i = 0; i < 32; i++)
 			set_button(0, (DreamcastKey)(1 << i), 1 << i);

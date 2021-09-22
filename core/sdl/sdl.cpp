@@ -39,6 +39,7 @@ static int window_height = WINDOW_HEIGHT;
 static bool gameRunning;
 static bool mouseCaptured;
 bool ShouldResize = false;
+bool ThreadCreated = false;
 
 static void sdl_open_joystick(int index)
 {
@@ -213,16 +214,22 @@ inline void SDLMouse::setAbsPos(int x, int y) {
 
 void do_sdl()
 {
-	// Do SDL Stuff
+	// Reset All the Buttons
+	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++)
+	{
+		std::shared_ptr<GamepadDevice> gamepad = GamepadDevice::GetGamepad(i); // incase this is not an SDL device, like a keyboard or w.e
+		if(gamepad == NULL){continue;}
+		gamepad->gamepad_btn_reset();
+		
+	}
+
+	// Do SDL STuff
 	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++)
 	{
 		std::shared_ptr<SDLGamepad> gamepad = SDLGamepad::GetSDLGamepad(i);
 		if(gamepad == NULL){continue;}
 
-		// Axis check these first, becuase they can unset button.
-		for (int i = 0; i < 6; i++){
-			gamepad->gamepad_axis_input(i,SDL_GameControllerGetAxis(gamepad->sdl_joystick,(SDL_GameControllerAxis)i));
-		}
+		gamepad->gamepad_btn_reset(); // Reset all the buttons
 
 		// Buttons
 		for (int i = 0; i < 22; i++){
@@ -230,6 +237,13 @@ void do_sdl()
 				gamepad->gamepad_btn_input(i, true);
 			}
 		}
+
+		// Axis check these first, becuase they can unset button.
+		for (int i = 0; i < 6; i++){
+			gamepad->gamepad_axis_input(i,SDL_GameControllerGetAxis(gamepad->sdl_joystick,(SDL_GameControllerAxis)i));
+		}
+
+		gamepad->gamepad_btn_cleanup();
 	}
 
 	// Keyboard
@@ -242,43 +256,23 @@ void do_sdl()
 	}
 }
 
-void do_cleanup(){
-	// Do SDL Stuff
-	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++){
-		std::shared_ptr<SDLGamepad> gamepad = SDLGamepad::GetSDLGamepad(i);
-		if(gamepad == NULL){continue;}
-		gamepad->gamepad_btn_cleanup();
-		//NOTICE_LOG(INPUT,"Cleaned up: %d",i);
-	}
-}
+void SDL_InputThread() {
 
-void do_clearInputs(){
-	// Do SDL Stuff
-	for (int i = 0; i < GamepadDevice::GetGamepadCount() -1; i++){
-		std::shared_ptr<GamepadDevice> gamepad = GamepadDevice::GetGamepad(i);
-		if(gamepad == NULL){continue;}
-		gamepad->gamepad_btn_reset();
-	}
-}
-
-void input_sdl_handle()
-{
-	//NOTICE_LOG(INPUT, "Input Polled");
-	SDLGamepad::UpdateRumble();
-
-	if(!gui_is_open()){
-		do_clearInputs();
-		do_sdl();
-	}
-
-	SDL_Event event;
-	while (SDL_PollEvent(&event))
+	//printf("Threaded Inputs Started\n");
+	ThreadCreated = true;
+	bool doDaQuit = false;
+	
+	while (!doDaQuit)
 	{
-		switch (event.type)
+		SDL_Event event;
+		while (SDL_WaitEvent(&event))
+		{
+			switch (event.type)
 		{
 #if !defined(__APPLE__)
 			case SDL_QUIT:
 				dc_exit();
+				doDaQuit = true;
 				break;
 
 			case SDL_KEYDOWN:
@@ -308,7 +302,7 @@ void input_sdl_handle()
 					}
 					else if (!config::UseRawInput)
 					{
-						if(gui_is_open()) sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN);
+						sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN);
 					}
 				}
 				break;
@@ -339,14 +333,14 @@ void input_sdl_handle()
 				{
 					std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.cbutton.which);
 					if (device != NULL)
-						device->gamepad_btn_input(event.cbutton.button, true);
+						device->gamepad_btn_input(event.cbutton.button, true, true);
 				}
 				break;
 			case SDL_CONTROLLERBUTTONUP:
 				{
 					std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.cbutton.which);
 					if (device != NULL)
-						device->gamepad_btn_input(event.cbutton.button, false);
+						device->gamepad_btn_input(event.cbutton.button, false, true);
 				}
 				break;
 			case SDL_CONTROLLERAXISMOTION:
@@ -428,11 +422,15 @@ void input_sdl_handle()
 				sdl_close_joystick((SDL_JoystickID)event.jdevice.which);
 				break;
 		}
+		}
 	}
-	
-	if(!gui_is_open()){
-		do_cleanup();
-	}
+}
+
+void input_sdl_handle()
+{
+	//NOTICE_LOG(INPUT, "Input Polled");
+	if(!ThreadCreated){std::thread sdl_input_thread(&SDL_InputThread); sdl_input_thread.detach();}
+	if(!gui_is_open()){do_sdl();} // We don't do this while the UI is open.
 }
 
 void sdl_window_set_text(const char* text)

@@ -215,12 +215,13 @@ void InputMapping::load(FILE* fp)
 
 	this->name = mf.get("emulator", "mapping_name", "<Unknown>");
 
-	int dz = mf.get_int("emulator", "dead_zone", 10);
+	int dz = mf.get_int("emulator", "dead_zone", 25);
 	dz = std::min(dz, 100);
 	dz = std::max(dz, 0);
-	version = mf.get_int("emulator", "version", 1);
 
-	this->dead_zone = (float)dz / 100.f;
+	version = mf.get_int("emulator", "version", 2);
+
+	this->dead_zone = dz;
 
 	for (int port = 0; port < 4; port++)
 	{
@@ -322,7 +323,7 @@ bool InputMapping::save(const char *name)
 	ConfigFile mf;
 
 	mf.set("emulator", "mapping_name", this->name);
-	mf.set_int("emulator", "dead_zone", (int)std::round(this->dead_zone * 100.f));
+	mf.set_int("emulator", "dead_zone", (int)std::round(this->dead_zone));
 	mf.set_int("emulator", "version", version);
 
 	for (int port = 0; port < 4; port++)

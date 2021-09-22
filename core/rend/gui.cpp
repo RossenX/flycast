@@ -470,37 +470,42 @@ static void gui_display_commands()
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 	}
-	if(!config::GGPOEnable){
+	if (!config::GGPOEnable)
+	{
 		if (ImGui::Button("Load State", ImVec2(110 * scaling, 50 * scaling)))
-	{
-		gui_state = GuiState::Closed;
-		dc_loadstate(config::SavestateSlot);
-	}
-	ImGui::SameLine();
-	std::string slot = "Slot " + std::to_string((int)config::SavestateSlot + 1);
-	if (ImGui::Button(slot.c_str(), ImVec2(80 * scaling - ImGui::GetStyle().FramePadding.x, 50 * scaling)))
-		ImGui::OpenPopup("slot_select_popup");
-    if (ImGui::BeginPopup("slot_select_popup"))
-    {
-        for (int i = 0; i < 10; i++)
-            if (ImGui::Selectable(std::to_string(i + 1).c_str(), config::SavestateSlot == i, 0,
-            		ImVec2(ImGui::CalcTextSize("Slot 8").x, 0))) {
-                config::SavestateSlot = i;
-                SaveSettings();
-            }
-        ImGui::EndPopup();
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Save State", ImVec2(110 * scaling, 50 * scaling)))
-	{
-		gui_state = GuiState::Closed;
-		dc_savestate(config::SavestateSlot);
-	}
-	if (settings.imgread.ImagePath[0] == '\0')
-	{
-        ImGui::PopItemFlag();
-        ImGui::PopStyleVar();
-	}
+		{
+			gui_state = GuiState::Closed;
+			dc_loadstate(config::SavestateSlot);
+		}
+		ImGui::SameLine();
+		std::string slot = "Slot " + std::to_string((int)config::SavestateSlot + 1);
+		if (ImGui::Button(slot.c_str(), ImVec2(80 * scaling - ImGui::GetStyle().FramePadding.x, 50 * scaling)))
+			ImGui::OpenPopup("slot_select_popup");
+		if (ImGui::BeginPopup("slot_select_popup"))
+		{
+			for (int i = 0; i < 10; i++)
+				if (ImGui::Selectable(std::to_string(i + 1).c_str(), config::SavestateSlot == i, 0,
+									  ImVec2(ImGui::CalcTextSize("Slot 8").x, 0)))
+				{
+					config::SavestateSlot = i;
+					SaveSettings();
+				}
+			ImGui::EndPopup();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Save State", ImVec2(110 * scaling, 50 * scaling)))
+		{
+			gui_state = GuiState::Closed;
+			dc_savestate(config::SavestateSlot);
+		}
+		if (settings.imgread.ImagePath[0] == '\0')
+		{
+			ImGui::PopItemFlag();
+			ImGui::PopStyleVar();
+		}
+	}else{
+		OptionCheckbox("Network Statistics", config::NetworkStats,
+			    			"Display network statistics on screen");
 	}
 	ImGui::Columns(2, "buttons", false);
 	if (ImGui::Button("Settings", ImVec2(150 * scaling, 50 * scaling)))
@@ -513,7 +518,8 @@ static void gui_display_commands()
 		GamepadDevice::load_system_mappings();
 		gui_state = GuiState::Closed;
 	}
-	if(!config::GGPOEnable){
+	if (!config::GGPOEnable)
+	{
 		ImGui::NextColumn();
 		const char *disk_label = libGDR_GetDiscType() == Open ? "Insert Disk" : "Eject Disk";
 		if (ImGui::Button(disk_label, ImVec2(150 * scaling, 50 * scaling)))
@@ -536,7 +542,7 @@ static void gui_display_commands()
 	}
 	ImGui::Columns(1, nullptr, false);
 	if (ImGui::Button("Exit", ImVec2(300 * scaling + ImGui::GetStyle().ColumnsMinSpacing + ImGui::GetStyle().FramePadding.x * 2 - 1,
-			50 * scaling)))
+									 50 * scaling)))
 	{
 		gui_stop_game();
 	}

@@ -40,8 +40,8 @@ public:
 	void gamepad_btn_reset();
 	void gamepad_btn_cleanup();
 
-	virtual bool gamepad_btn_input(u32 code, bool pressed);
-	bool gamepad_axis_input(int code, int value, bool isEvent = false);
+	virtual bool gamepad_btn_input(u32 code, bool pressed, bool isevent = false);
+	bool gamepad_axis_input(int code, int value, bool isevent = false);
 	virtual ~GamepadDevice() = default;
 	
 	virtual void detect_btn_input(input_detected_cb button_pressed);

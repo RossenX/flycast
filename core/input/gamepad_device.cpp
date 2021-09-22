@@ -33,8 +33,12 @@
 
 // Gamepads
 u32 kcode[4] = { ~0u, ~0u, ~0u, ~0u };
+u32 kcode_events[4] = { ~0u, ~0u, ~0u, ~0u };
 u32 kcode_lastframe[4] = { ~0u, ~0u, ~0u, ~0u };
-u32 kcode_nextframe[4] = { ~0u, ~0u, ~0u, ~0u };
+
+u32 kcode_events_temp2;
+
+
 s8 joyx[4];
 s8 joyy[4];
 s8 joyrx[4];
@@ -58,12 +62,15 @@ void GamepadDevice::gamepad_btn_reset(){
  	joyry[_maple_port] = 0;
  	rt[_maple_port] = 0;
  	lt[_maple_port] = 0;
+
 }
+
 
 void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, does it work? also yes. Might clean up later make pretty or optimize
 	
-	kcode[_maple_port] &= kcode_nextframe[_maple_port];
-	kcode_nextframe[_maple_port] = ~0u;
+	kcode_events_temp2 = ~0u;
+	memcpy(&kcode_events_temp2, &kcode_events[_maple_port], sizeof(kcode_events[_maple_port]));
+	kcode_events[_maple_port] = ~0u;
 
 	u32 UP = DC_DPAD_UP;
 	u32 DOWN = DC_DPAD_DOWN;
@@ -75,15 +82,33 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 	u32 _LEFT = DC_DPAD_LEFT|EMU_AXIS_DPAD_LEFT;
 	u32 _RIGHT = DC_DPAD_RIGHT|EMU_AXIS_DPAD_RIGHT;
 
+	if (((kcode[_maple_port]|kcode_events_temp2) & (LEFT | RIGHT)) == 0) {
+		kcode_events_temp2 |= (_LEFT|_RIGHT);
+		NOTICE_LOG(INPUT,"Removed LEFT|RIGHT COMBO");
+	}else if (((kcode[_maple_port]|kcode_events_temp2) & (UP | DOWN)) == 0) {
+		kcode_events_temp2 |= (_UP|_DOWN);
+		NOTICE_LOG(INPUT,"Removed UP|DOWN COMBO");
+	}
+
+	if ((kcode[_maple_port] & (LEFT | RIGHT)) == 0) {
+		kcode[_maple_port] |= (_LEFT|_RIGHT);
+		NOTICE_LOG(INPUT,"Removed LEFT|RIGHT kcode");
+	}else if ((kcode[_maple_port] & (UP | DOWN)) == 0) {
+		kcode[_maple_port] |= (_UP|_DOWN);
+		NOTICE_LOG(INPUT,"Removed LEFT|RIGHT kcode");
+	}
+
+	kcode[_maple_port] &= kcode_events_temp2;
+	
 	// DOWN LEFT
 	if ((kcode[_maple_port] & (DOWN | LEFT)) == 0) {
 		if ((kcode_lastframe[_maple_port] & (DOWN | RIGHT))==0) {
 			kcode[_maple_port] |= _LEFT;
-			kcode_nextframe[_maple_port] &= ~_DOWN;
+			kcode_events[_maple_port] &= ~_DOWN;
 			NOTICE_LOG(INPUT,"DOWN RIGHT > DOWN LEFT");
 		} else if ((kcode_lastframe[_maple_port] & (UP | LEFT))==0) {
 			kcode[_maple_port] |= _DOWN;
-			kcode_nextframe[_maple_port] &= ~_LEFT;
+			kcode_events[_maple_port] &= ~_LEFT;
 			NOTICE_LOG(INPUT,"UP LEFT > DOWN LEFT");
 		}
 
@@ -92,11 +117,11 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 
 		if ((kcode_lastframe[_maple_port] & (DOWN | LEFT))==0) {
 			kcode[_maple_port] |= _RIGHT;
-			kcode_nextframe[_maple_port] &= ~_DOWN;
+			kcode_events[_maple_port] &= ~_DOWN;
 			NOTICE_LOG(INPUT,"DOWN LEFT > DOWN RIGHT");
 		}else if ((kcode_lastframe[_maple_port] & (UP | RIGHT))==0) {
 			kcode[_maple_port] |= _DOWN;
-			kcode_nextframe[_maple_port] &= ~_RIGHT;
+			kcode_events[_maple_port] &= ~_RIGHT;
 			NOTICE_LOG(INPUT,"UP RIGHT > DOWN RIGHT");
 		}
 
@@ -105,11 +130,11 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 
 		if ((kcode_lastframe[_maple_port] & (UP | RIGHT))==0) {
 			kcode[_maple_port] |= LEFT;
-			kcode_nextframe[_maple_port] &= ~_UP;
+			kcode_events[_maple_port] &= ~_UP;
 			NOTICE_LOG(INPUT,"UP RIGHT > UP LEFT");
 		}else if ((kcode_lastframe[_maple_port] & (DOWN | LEFT))==0) {
 			kcode[_maple_port] |= _UP;
-			kcode_nextframe[_maple_port] &= ~_LEFT;
+			kcode_events[_maple_port] &= ~_LEFT;
 			NOTICE_LOG(INPUT,"DOWN LEFT > UP LEFT");
 		}
 
@@ -117,36 +142,31 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 	else if ((kcode[_maple_port] & (UP | RIGHT))==0) {
 		if ((kcode_lastframe[_maple_port] & (UP | LEFT))==0) {
 			kcode[_maple_port] |= _RIGHT;
-			kcode_nextframe[_maple_port] &= ~_UP;
+			kcode_events[_maple_port] &= ~_UP;
 			NOTICE_LOG(INPUT,"UP LEFT > UP RIGHT");
 		}else if ((kcode_lastframe[_maple_port] & (DOWN | RIGHT))==0) {
 			kcode[_maple_port] |= _UP;
-			kcode_nextframe[_maple_port] &= ~_RIGHT;
+			kcode_events[_maple_port] &= ~_RIGHT;
 			NOTICE_LOG(INPUT,"DOWN RIGHT > UP RIGHT");
 		}
 	}
 
-	// Cancel out left/right
-	if ((kcode[_maple_port] & (LEFT | RIGHT)) == 0) {
-		kcode[_maple_port] |= (_LEFT|_RIGHT);
-		NOTICE_LOG(INPUT,"LEFT RIGHT CANCELED OUT");
-	}else if ((kcode[_maple_port] & (UP | DOWN)) == 0) {
-		kcode[_maple_port] |= (_UP|_DOWN);
-		NOTICE_LOG(INPUT,"UP DOWN CANCELED OUT");
-	}
-
-	memcpy(kcode_lastframe,kcode,sizeof(kcode));
+	memcpy(&kcode_lastframe[_maple_port],&kcode[_maple_port],sizeof(kcode[_maple_port]));
 }
 
-bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
+bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 {
+	u32 *InputsToUse;
+	if(isevent){InputsToUse = kcode_events;
+	}else{InputsToUse = kcode;}
+
 	if (_input_detected != nullptr && _detecting_button
-			&& os_GetSeconds() >= _detection_start_time && pressed)
-	{
+			&& os_GetSeconds() >= _detection_start_time && pressed){
 		_input_detected(code);
 		_input_detected = nullptr;
 		return true;
 	}
+
 	if (!input_mapper || _maple_port < 0 || _maple_port > (int)ARRAY_SIZE(kcode) || gui_is_open())
 		return false;
 
@@ -157,27 +177,29 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 
 		if (key <= DC_BTN_RELOAD)
 		{
-			if (pressed)
+			if (pressed) InputsToUse[port] &= ~key;
+
+			if (isevent && !pressed)
 			{
-				kcode[port] &= ~key;
-			}
-			else{
-				if(gui_is_open()) kcode[port] |= key;
-
-				// Preserve Diagonals
-				switch (key){
-					case DC_DPAD_UP: case DC_DPAD_DOWN:
-					if(((kcode[port] & DC_DPAD_LEFT)==0) || ((kcode[port] & DC_DPAD_RIGHT)==0)){
-						kcode[port] &= ~key;
+				switch (key)
+				{
+				case DC_DPAD_UP:
+				case DC_DPAD_DOWN:
+					if (((kcode_events[port] & DC_DPAD_LEFT) == 0) || ((kcode_events[port] & DC_DPAD_RIGHT) == 0))
+					{
+						kcode_events[port] &= ~key;
+						NOTICE_LOG(INPUT, "Added UP/DOWN");
 					}
-
-					case DC_DPAD_LEFT: case DC_DPAD_RIGHT:
-					if(((kcode[port] & DC_DPAD_UP)==0) || ((kcode[port] & DC_DPAD_DOWN)==0)){
-						kcode[port] &= ~key;
+				case DC_DPAD_LEFT:
+				case DC_DPAD_RIGHT:
+					if (((kcode_events[port] & DC_DPAD_UP) == 0) || ((kcode_events[port] & DC_DPAD_DOWN) == 0))
+					{
+						kcode_events[port] &= ~key;
+						NOTICE_LOG(INPUT, "Added LEFT/RIGHT");
 					}
 				}
 			}
-				
+
 #ifdef TEST_AUTOMATION
 			if (record_input != NULL)
 				fprintf(record_input, "%ld button %x %04x\n", sh4_sched_now64(), port, kcode[port]);
@@ -249,11 +271,14 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 	return rc;
 }
 
-bool GamepadDevice::gamepad_axis_input(int code, int value, bool isEvent)
+bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 {
+	u32 *InputsToUse;
+	if(isevent){InputsToUse = kcode_events;
+	}else{InputsToUse = kcode;}
 
 	if (input_mapper->get_axis_inverted(0, code)) value *= -1;
-
+	
 	s32 v; // The final Value
 	if(code > 3){
 		v = value / 128; // Should make a value between 0-256
@@ -275,66 +300,93 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isEvent)
 
 	if (!input_mapper || _maple_port < 0 || _maple_port > 4 || gui_is_open()) return false;
 
+	int _deadzone = int((255 * input_mapper->dead_zone) / 100);
+	if(code <= 3){_deadzone /= 2;} // Sticks have half the deadzone because they only go up to 128
+
 	auto handle_axis = [&](u32 port, DreamcastKey key)
 	{
-
 		if ((int)key < 0x10000) // Key Codes DIGITAL
 		{
-			if(code > 3){ // This is a trigger
-
-			if (v >= 64)
-				kcode[port] |= key;
-			else if (v < 64)
-				if(gui_is_open()) kcode[port] |= key | (key << 1);
-
-			}else{
-				if(gui_is_open()) kcode[port] |= key | (key << 1);
-				
-				if (v <= -64){
-					kcode[port] &= ~key;
+			if (code > 3)
+			{ // This is a trigger
+				if (v >= _deadzone)
+					InputsToUse[port] |= key;
+					
+			}
+			else
+			{
+				bool pressed = false;
+				if (v <= -_deadzone){
+					InputsToUse[port] &= ~key;
+					pressed = true;
+				}else if (v >= _deadzone){
+					InputsToUse[port] &= ~(key << 1);
+					pressed = true;
 				}
-				else if (v >= 64){
-					kcode[port] &= ~(key << 1);
-				}else{
-
+					
+				if (isevent && !pressed)
+				{
 					switch (key)
 					{
 					case DC_DPAD_UP:
 					case DC_DPAD_DOWN:
-						if (((kcode[port] & DC_DPAD_LEFT) == 0) || ((kcode[port] & DC_DPAD_RIGHT) == 0))
+						if (((kcode_events[port] & DC_DPAD_LEFT) == 0) || ((kcode_events[port] & DC_DPAD_RIGHT) == 0))
 						{
-							if (v <= -64)
-								kcode[port] &= ~key;
-							else if (v >= 64)
-								kcode[port] &= ~(key << 1);
+							if((kcode_lastframe[port] & DC_DPAD_UP)==0){
+								kcode_events[port] &= ~DC_DPAD_UP;
+								NOTICE_LOG(INPUT,"Added LEFT Analog");
+							}
+
+							if((kcode_lastframe[port] & DC_DPAD_DOWN)==0){
+								kcode_events[port] &= ~DC_DPAD_DOWN;
+								NOTICE_LOG(INPUT,"Added RIGHT Analog");
+							}
+							
 						}
+						break;
 					case DC_DPAD_LEFT:
 					case DC_DPAD_RIGHT:
-						if (((kcode[port] & DC_DPAD_UP) == 0) || ((kcode[port] & DC_DPAD_DOWN) == 0))
-						{
-							if (v <= -64)
-								kcode[port] &= ~key;
-							else if (v >= 64)
-								kcode[port] &= ~(key << 1);
+						if (((kcode_events[port] & DC_DPAD_UP) == 0) || ((kcode_events[port] & DC_DPAD_DOWN) == 0)){
+							
+							if((kcode_lastframe[port] & DC_DPAD_LEFT)==0){
+								kcode_events[port] &= ~DC_DPAD_LEFT;
+								NOTICE_LOG(INPUT,"Added UP Analog");
+							}
+
+							if((kcode_lastframe[port] & DC_DPAD_RIGHT)==0){
+								kcode_events[port] &= ~DC_DPAD_RIGHT;
+								NOTICE_LOG(INPUT,"Added DOWN Analog");
+							}
+							
 						}
+						break;
 					}
 				}
 			}
-			
-
 		}
 		else if (((int)key >> 16) == 1)	// Triggers
 		{
-			if(v < 0){v=0;}
-			if(v > 255){v=255;}
+			if(v < 0)
+			{
+				v = 0;
+			}
+			if(v > 255)
+			{
+				v = 255;
+			}
 			
-			if (key == DC_AXIS_LT){
-					lt[port] = (u8)v;
-					NOTICE_LOG(INPUT, "LT: %d", lt[port]);
-				}else if (key == DC_AXIS_RT){
-					rt[port] = (u8)v;
-					NOTICE_LOG(INPUT, "RT: %d", rt[port]);
-				}else{return false;}
+			if (key == DC_AXIS_LT)
+			{
+				lt[port] = (u8)v;
+			}
+			else if (key == DC_AXIS_RT)
+			{
+				rt[port] = (u8)v;
+			}
+			else
+			{
+				return false;
+			}
 			
 		}
 		else if (((int)key >> 16) == 2) // Analog axes
@@ -342,50 +394,51 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isEvent)
 			s8 *this_axis;
 			s8 *other_axis;
 			switch (key)
-				{
-				case DC_AXIS_X:
-					this_axis = &joyx[port];
-					other_axis = &joyy[port];
-					break;
+			{
+			case DC_AXIS_X:
+				this_axis = &joyx[port];
+				other_axis = &joyy[port];
+				break;
 
-				case DC_AXIS_Y:
-					this_axis = &joyy[port];
-					other_axis = &joyx[port];
-					break;
+			case DC_AXIS_Y:
+				this_axis = &joyy[port];
+				other_axis = &joyx[port];
+				break;
 
-				case DC_AXIS_X2:
-					this_axis = &joyrx[port];
-					other_axis = &joyry[port];
-					break;
+			case DC_AXIS_X2:
+				this_axis = &joyrx[port];
+				other_axis = &joyry[port];
+				break;
 
-				case DC_AXIS_Y2:
-					this_axis = &joyry[port];
-					other_axis = &joyrx[port];
-					break;
+			case DC_AXIS_Y2:
+				this_axis = &joyry[port];
+				other_axis = &joyrx[port];
+				break;
 
-				default:
-					return false;
-				}
+			default:
+				return false;
+			}
 			
-			if ((float)(v * v + *other_axis * *other_axis) < input_mapper->dead_zone * input_mapper->dead_zone * 128.f * 128.f){
+			if (abs(v) <= _deadzone)
+			{ // Square Gate
 				*this_axis = 0;
 				*other_axis = 0;
 			}
-
-			else{
+			else
+			{
 				*this_axis = (s8)v;
 			}
 			/**/
 		}
 		else if (((int)key >> 16) == 4) // Map triggers to digital buttons
 		{
-			if (abs(v) >= 64)kcode[port] &= ~(key & ~0x40000); // button pressed
+			if (abs(v) >= _deadzone)
+				InputsToUse[port] &= ~(key & ~0x40000); // button pressed
 		}
 		else
 			return false;
 
 		return true;
-
 	};
 
 	bool rc = false;

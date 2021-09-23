@@ -31,6 +31,8 @@ class GamepadDevice
 public:
 	typedef void (*input_detected_cb)(u32 code);
 
+	std::map<int, int> JoyValues;
+
 	const std::string& api_name() { return _api_name; }
 	const std::string& name() { return _name; }
 	int maple_port() const { return _maple_port; }
@@ -75,6 +77,7 @@ public:
 
 	static void load_system_mappings(int system = settings.platform.system);
 	bool find_mapping(int system);
+
 protected:
 	GamepadDevice(int maple_port, const char *api_name, bool remappable = true)
 		: _api_name(api_name), _maple_port(maple_port), _input_detected(nullptr), _remappable(remappable)

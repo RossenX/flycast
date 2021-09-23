@@ -36,9 +36,6 @@ u32 kcode[4] = { ~0u, ~0u, ~0u, ~0u };
 u32 kcode_events[4] = { ~0u, ~0u, ~0u, ~0u };
 u32 kcode_lastframe[4] = { ~0u, ~0u, ~0u, ~0u };
 
-u32 kcode_events_temp2;
-
-
 s8 joyx[4];
 s8 joyy[4];
 s8 joyrx[4];
@@ -68,7 +65,7 @@ void GamepadDevice::gamepad_btn_reset(){
 
 void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, does it work? also yes. Might clean up later make pretty or optimize
 	
-	kcode_events_temp2 = ~0u;
+	u32 kcode_events_temp2 = ~0u;
 	memcpy(&kcode_events_temp2, &kcode_events[_maple_port], sizeof(kcode_events[_maple_port]));
 	kcode_events[_maple_port] = ~0u;
 
@@ -303,23 +300,26 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 	int _deadzone = int((255 * input_mapper->dead_zone) / 100);
 	if(code <= 3){_deadzone /= 2;} // Sticks have half the deadzone because they only go up to 128
 
+	// This is from an event and it's on it's way back so we don't register these as button presses, otherwise axis will register an input on the way up and down
+	bool IgnorePress = false;
+	if(abs(JoyValues[code]) > abs(value) && isevent){IgnorePress = true;}
+
 	auto handle_axis = [&](u32 port, DreamcastKey key)
 	{
 		if ((int)key < 0x10000) // Key Codes DIGITAL
 		{
 			if (code > 3)
-			{ // This is a trigger
-				if (v >= _deadzone)
+			{
+				if (v >= _deadzone && !IgnorePress)
 					InputsToUse[port] |= key;
-					
 			}
 			else
 			{
 				bool pressed = false;
-				if (v <= -_deadzone){
+				if (v <= -_deadzone && !IgnorePress){
 					InputsToUse[port] &= ~key;
 					pressed = true;
-				}else if (v >= _deadzone){
+				}else if (v >= _deadzone && !IgnorePress){
 					InputsToUse[port] &= ~(key << 1);
 					pressed = true;
 				}
@@ -392,7 +392,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 		else if (((int)key >> 16) == 2) // Analog axes
 		{
 			s8 *this_axis;
-			s8 *other_axis;
+			s8 *other_axis; // I don't think this is used anymore :thinking:
 			switch (key)
 			{
 			case DC_AXIS_X:
@@ -424,7 +424,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 		}
 		else if (((int)key >> 16) == 4) // Map triggers to digital buttons
 		{
-			if (abs(v) >= _deadzone)
+			if (abs(v) >= _deadzone && !IgnorePress)
 				InputsToUse[port] &= ~(key & ~0x40000); // button pressed
 		}
 		else

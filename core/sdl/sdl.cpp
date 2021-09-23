@@ -217,7 +217,7 @@ void do_sdl()
 	// Reset All the Buttons
 	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++)
 	{
-		std::shared_ptr<GamepadDevice> gamepad = GamepadDevice::GetGamepad(i); // incase this is not an SDL device, like a keyboard or w.e
+		std::shared_ptr<GamepadDevice> gamepad = GamepadDevice::GetGamepad(i);
 		if(gamepad == NULL){continue;}
 		gamepad->gamepad_btn_reset();
 		
@@ -229,8 +229,6 @@ void do_sdl()
 		std::shared_ptr<SDLGamepad> gamepad = SDLGamepad::GetSDLGamepad(i);
 		if(gamepad == NULL){continue;}
 
-		gamepad->gamepad_btn_reset(); // Reset all the buttons
-
 		// Buttons
 		for (int i = 0; i < 22; i++){
 			if(SDL_GameControllerGetButton(gamepad->sdl_joystick,(SDL_GameControllerButton)i) != 0){
@@ -240,10 +238,10 @@ void do_sdl()
 
 		// Axis check these first, becuase they can unset button.
 		for (int i = 0; i < 6; i++){
-			gamepad->gamepad_axis_input(i,SDL_GameControllerGetAxis(gamepad->sdl_joystick,(SDL_GameControllerAxis)i));
+			int JoyValue = SDL_GameControllerGetAxis(gamepad->sdl_joystick,(SDL_GameControllerAxis)i);
+			gamepad->gamepad_axis_input(i,JoyValue);
+			gamepad->JoyValues[i] = JoyValue;
 		}
-
-		gamepad->gamepad_btn_cleanup();
 	}
 
 	// Keyboard
@@ -254,7 +252,15 @@ void do_sdl()
     		sdl_keyboard->keyboard_input((SDL_Scancode)i,true);
 		}
 	}
-	sdl_keyboard->gamepad_btn_cleanup();
+
+	// Cleanup the inputs
+	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++)
+	{
+		std::shared_ptr<GamepadDevice> gamepad = GamepadDevice::GetGamepad(i);
+		if(gamepad == NULL){continue;}
+		gamepad->gamepad_btn_cleanup();
+		
+	}
 }
 
 void SDL_InputThread() {

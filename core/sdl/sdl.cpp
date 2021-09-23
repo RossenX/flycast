@@ -45,7 +45,7 @@ static void sdl_open_joystick(int index)
 {
 	//SDL_Joystick *pJoystick = SDL_JoystickOpen(index);
 	SDL_GameController* pJoystick = SDL_GameControllerOpen(index);
-
+	
 	if (pJoystick == NULL)
 	{
 		INFO_LOG(INPUT, "SDL: Cannot open joystick %d", index + 1);
@@ -215,7 +215,7 @@ inline void SDLMouse::setAbsPos(int x, int y) {
 void do_sdl()
 {
 	// Reset All the Buttons
-	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++)
+	for (int i = 0; i < GamepadDevice::GetGamepadCount() -1; i++)
 	{
 		std::shared_ptr<GamepadDevice> gamepad = GamepadDevice::GetGamepad(i);
 		if(gamepad == NULL){continue;}
@@ -254,7 +254,7 @@ void do_sdl()
 	}
 
 	// Cleanup the inputs
-	for (int i = 0; i < SDLGamepad::GetGamepadCount() -1; i++)
+	for (int i = 0; i < GamepadDevice::GetGamepadCount() -1; i++)
 	{
 		std::shared_ptr<GamepadDevice> gamepad = GamepadDevice::GetGamepad(i);
 		if(gamepad == NULL){continue;}
@@ -360,7 +360,11 @@ void SDL_InputThread() {
 				{
 					std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.caxis.which);
 					if (device != NULL)
+					{
 						device->gamepad_axis_input(event.caxis.axis, event.caxis.value, true);
+						device->JoyValues[event.caxis.axis] = event.caxis.value;
+						NOTICE_LOG(INPUT,"Axis Motion: %d | %d",event.caxis.axis,event.caxis.value);
+					}
 				}
 				break;
 #if !defined(__APPLE__)

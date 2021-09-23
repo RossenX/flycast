@@ -109,7 +109,8 @@ public:
 	{
 		_name = SDL_JoystickName(SDL_GameControllerGetJoystick(sdl_joystick));
 		sdl_joystick_instance = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(sdl_joystick));
-		_unique_id = "sdl_joystick_" + std::to_string(sdl_joystick_instance);
+		_unique_id = "sdl_joystick_" + std::to_string(joystick_idx);
+
 		INFO_LOG(INPUT, "SDL: Opened joystick %d on port %d: '%s' unique_id=%s", sdl_joystick_instance, maple_port, _name.c_str(), _unique_id.c_str());
 
 		if (!find_mapping())

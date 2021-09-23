@@ -270,26 +270,25 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 
 bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 {
-	u32 *InputsToUse;
-	if(isevent){InputsToUse = kcode_events;
-	}else{InputsToUse = kcode;}
-
 	if (input_mapper->get_axis_inverted(0, code)) value *= -1;
 	
 	s32 v; // The final Value
 	if(code > 3){
-		v = value / 128; // Should make a value between 0-256
+		v = value / 128; // Should make a value between 0 to 256
 		if(v < 0) v = 0;
 		if(v > 255) v = 255;
 	}else{
-		v = value / 256; // Should make a value between 0-128
+		v = value / 256; // Should make a value between -128 to 128
 		if(v < -128) v = -128;
 		if(v > 127) v = 127;
 		
 	}
 	
+	int _deadzone = int((255 * input_mapper->dead_zone) / 100);
+	if(code <= 3){_deadzone /= 2;} // Sticks have half the deadzone because they only go up to 128
+
 	// This little bit looks to be for the keymapping
-	if (_input_detected != NULL && !_detecting_button && os_GetSeconds() >= _detection_start_time && (v >= 64 || v <= -64)){
+	if (_input_detected != NULL && (v >= _deadzone || v <= -_deadzone)){
 		_input_detected(code);
 		_input_detected = NULL;
 		return true;
@@ -297,8 +296,9 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 
 	if (!input_mapper || _maple_port < 0 || _maple_port > 4 || gui_is_open()) return false;
 
-	int _deadzone = int((255 * input_mapper->dead_zone) / 100);
-	if(code <= 3){_deadzone /= 2;} // Sticks have half the deadzone because they only go up to 128
+	u32 *InputsToUse;
+	if(isevent){InputsToUse = kcode_events;
+	}else{InputsToUse = kcode;}
 
 	// This is from an event and it's on it's way back so we don't register these as button presses, otherwise axis will register an input on the way up and down
 	bool IgnorePress = false;
@@ -310,8 +310,9 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 		{
 			if (code > 3)
 			{
-				if (v >= _deadzone && !IgnorePress)
+				if (v >= _deadzone && !IgnorePress){
 					InputsToUse[port] |= key;
+				}
 			}
 			else
 			{
@@ -366,22 +367,22 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 		}
 		else if (((int)key >> 16) == 1)	// Triggers
 		{
-			if(v < 0)
-			{
-				v = 0;
-			}
-			if(v > 255)
-			{
-				v = 255;
-			}
+			if(v < 0){v = 0;}
+			if(v > 255){v = 255;}
 			
 			if (key == DC_AXIS_LT)
 			{
-				lt[port] = (u8)v;
+				if(!IgnorePress){
+					lt[port] = (u8)v;
+				}
+				
 			}
 			else if (key == DC_AXIS_RT)
 			{
-				rt[port] = (u8)v;
+				if(!IgnorePress){
+					rt[port] = (u8)v;
+				}
+				
 			}
 			else
 			{
@@ -419,7 +420,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 				return false;
 			}
 			
-			if (abs(v) > _deadzone) *this_axis = (s8)v;
+			if (abs(v) > _deadzone && !IgnorePress) *this_axis = (s8)v;
 			
 		}
 		else if (((int)key >> 16) == 4) // Map triggers to digital buttons

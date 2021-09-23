@@ -1504,7 +1504,7 @@ void AICA_Sample()
 		return;
 
 	//Mono !
-	if (CommonData->Mono)
+	if (CommonData->Mono || config::ForceMono.get())
 	{
 		//Yay for mono =P
 		mixl+=mixr;

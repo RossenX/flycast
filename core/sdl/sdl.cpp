@@ -240,7 +240,6 @@ void do_sdl()
 		for (int i = 0; i < 6; i++){
 			int JoyValue = SDL_GameControllerGetAxis(gamepad->sdl_joystick,(SDL_GameControllerAxis)i);
 			gamepad->gamepad_axis_input(i,JoyValue);
-			gamepad->JoyValues[i] = JoyValue;
 		}
 	}
 
@@ -362,8 +361,6 @@ void SDL_InputThread() {
 					if (device != NULL)
 					{
 						device->gamepad_axis_input(event.caxis.axis, event.caxis.value, true);
-						device->JoyValues[event.caxis.axis] = event.caxis.value;
-						NOTICE_LOG(INPUT,"Axis Motion: %d | %d",event.caxis.axis,event.caxis.value);
 					}
 				}
 				break;

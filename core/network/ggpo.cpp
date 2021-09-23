@@ -487,19 +487,26 @@ bool nextFrame()
 		return false;
 	// will call save_game_state
 	ggpo_advance_frame(ggpoSession);
-
 	// may rollback
 	ggpo_idle(ggpoSession, 0);
+
+	GGPONetworkStats stats;
+	ggpo_get_network_stats(ggpoSession, remotePlayer, &stats);
+	// Try to stabalize the clients and keep them in sync so predictions don't skyrocket
+	if((stats.sync.predicted_frames-1) > (stats.network.ping / 16.7)){
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+
 	// may call save_game_state
 	do {
 		u32 input = ~kcode[localPlayerNum];
 		if (settings.platform.system != DC_PLATFORM_NAOMI)
 		{
-			if (rt[localPlayerNum] >= 64)
+			if (rt[localPlayerNum] > 0)
 				input |= EMU_BTN_TRIGGER_RIGHT;
 			else
 				input &= ~EMU_BTN_TRIGGER_RIGHT;
-			if (lt[localPlayerNum] >= 64)
+			if (lt[localPlayerNum] > 0)
 				input |= EMU_BTN_TRIGGER_LEFT;
 			else
 				input &= ~EMU_BTN_TRIGGER_LEFT;

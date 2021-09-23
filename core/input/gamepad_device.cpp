@@ -43,6 +43,8 @@ s8 joyry[4];
 u8 rt[4];
 u8 lt[4];
 
+std::map<int, int> JoyValues;
+
 std::vector<std::shared_ptr<GamepadDevice>> GamepadDevice::_gamepads;
 std::mutex GamepadDevice::_gamepads_mutex;
 
@@ -294,8 +296,10 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 		return true;
 	}
 
-	if (!input_mapper || _maple_port < 0 || _maple_port > 4 || gui_is_open()) return false;
-
+	if (!input_mapper || _maple_port < 0 || _maple_port > 4 || gui_is_open()){
+		return false;
+	}
+	
 	u32 *InputsToUse;
 	if(isevent){InputsToUse = kcode_events;
 	}else{InputsToUse = kcode;}
@@ -303,6 +307,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 	// This is from an event and it's on it's way back so we don't register these as button presses, otherwise axis will register an input on the way up and down
 	bool IgnorePress = false;
 	if(abs(JoyValues[code]) > abs(value) && isevent){IgnorePress = true;}
+	JoyValues[code] = value;
 
 	auto handle_axis = [&](u32 port, DreamcastKey key)
 	{
@@ -367,22 +372,22 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 		}
 		else if (((int)key >> 16) == 1)	// Triggers
 		{
+			if(code <= 3){v = abs(value / 128);}
+	
 			if(v < 0){v = 0;}
 			if(v > 255){v = 255;}
-			
-			if (key == DC_AXIS_LT)
-			{
-				if(!IgnorePress){
+
+			if (key == DC_AXIS_LT){
+				if(abs(v) >= _deadzone){
 					lt[port] = (u8)v;
+					NOTICE_LOG(INPUT,"LT: %d %d",lt[port],v);
 				}
-				
 			}
-			else if (key == DC_AXIS_RT)
-			{
-				if(!IgnorePress){
+			else if (key == DC_AXIS_RT){
+				if(abs(v) >= _deadzone){
 					rt[port] = (u8)v;
+					NOTICE_LOG(INPUT,"RT: %d %d",lt[port],v);
 				}
-				
 			}
 			else
 			{

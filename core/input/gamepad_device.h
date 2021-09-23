@@ -30,9 +30,7 @@ class GamepadDevice
 {
 public:
 	typedef void (*input_detected_cb)(u32 code);
-
-	std::map<int, int> JoyValues;
-
+	
 	const std::string& api_name() { return _api_name; }
 	const std::string& name() { return _name; }
 	int maple_port() const { return _maple_port; }

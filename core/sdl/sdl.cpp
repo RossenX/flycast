@@ -314,7 +314,7 @@ void SDL_InputThread() {
 					}
 					else if (!config::UseRawInput)
 					{
-						sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN,0);
+						sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN,0,true);
 					}
 				}
 				break;

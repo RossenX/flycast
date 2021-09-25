@@ -78,6 +78,7 @@ Option<bool> Fog("rend.Fog", true);
 Option<bool> FloatVMUs("rend.FloatVMUs");
 Option<bool> Rotate90("rend.Rotate90");
 Option<bool> PerStripSorting("rend.PerStripSorting");
+Option<bool> ShowNamePlates("rend.ShowNamePlates",true);
 #ifdef __APPLE__
 Option<bool> DelayFrameSwapping("rend.DelayFrameSwapping", false);
 #else

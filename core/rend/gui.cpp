@@ -471,6 +471,7 @@ static void gui_display_commands()
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 	}
+	OptionCheckbox("Player Names", config::ShowNamePlates,"Names of Players while playing offline");
 	if (!config::GGPOEnable)
 	{
 		if (ImGui::Button("Load State", ImVec2(110 * scaling, 50 * scaling)))
@@ -505,8 +506,7 @@ static void gui_display_commands()
 			ImGui::PopStyleVar();
 		}
 	}else{
-		OptionCheckbox("Network Statistics", config::NetworkStats,
-			    			"Display network statistics on screen");
+		OptionCheckbox("Network Statistics", config::NetworkStats,"Display network statistics on screen");
 	}
 	ImGui::Columns(2, "buttons", false);
 	if (ImGui::Button("Settings", ImVec2(150 * scaling, 50 * scaling)))
@@ -2292,9 +2292,7 @@ void gui_display_osd()
 	if (message.empty())
 		message = getFPSNotification();
 
-	
-
-	if (!message.empty() || config::FloatVMUs || crosshairsNeeded() || (ggpo::active() && config::NetworkStats))
+	if (!message.empty() || config::FloatVMUs || crosshairsNeeded() || (ggpo::active() && config::NetworkStats) || config::ShowNamePlates)
 	{
 		ImGui_Impl_NewFrame();
 		ImGui::NewFrame();
@@ -2319,9 +2317,8 @@ void gui_display_osd()
 			ggpo::displayStats();
 		}
 
-		// Show even when not in GGPO, for local player.
-		PlayerNamesFrame();
-		
+		if(config::ShowNamePlates){PlayerNamesFrame();}
+
 		ImGui::Render();
 		ImGui_impl_RenderDrawData(ImGui::GetDrawData());
 	}

@@ -48,8 +48,6 @@ bool mainui_rend_frame()
 		ShouldResize = false;
 	}
 	
-	
-
 	if (gui_is_open() || gui_state == GuiState::VJoyEdit)
 	{
 		gui_display_ui();

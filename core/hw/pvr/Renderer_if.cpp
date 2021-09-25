@@ -207,7 +207,7 @@ bool rend_single_frame(const bool& enabled)
 {
 	do
 	{
-		if (config::ThreadedRendering && !rs.Wait(50))
+		if (config::ThreadedRendering && !rs.Wait(1))
 			return false;
 		if (do_swap)
 		{

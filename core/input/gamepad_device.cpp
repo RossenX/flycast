@@ -82,11 +82,12 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 	u32 _LEFT = DC_DPAD_LEFT;
 	u32 _RIGHT = DC_DPAD_RIGHT;
 
+	// If both the thread and the frame have double sided inputs then clear the whole event frame and only use the inputs from the input frame
 	if (((kcode[_maple_port]|kcode_events_temp2) & (LEFT | RIGHT)) == 0) {
-		kcode_events_temp2 |= (_LEFT | _RIGHT);
+		kcode_events_temp2 |= (_LEFT | _RIGHT | _DOWN | _UP);
 		NOTICE_LOG(INPUT,"Removed LEFT|RIGHT COMBO");
 	}else if (((kcode[_maple_port]|kcode_events_temp2) & (UP | DOWN)) == 0) {
-		kcode_events_temp2 |= (_UP | _DOWN);
+		kcode_events_temp2 |= (LEFT | _RIGHT | _DOWN | _UP);
 		NOTICE_LOG(INPUT,"Removed UP|DOWN COMBO");
 	}
 
@@ -347,33 +348,25 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 					
 				if (isevent && pressed)
 				{
+					u32 OtheAxis;
 					switch (key)
 					{
 					case DC_DPAD_UP:
 					case DC_DPAD_DOWN:
-						if ((kcode[port] & DC_DPAD_LEFT) == 0)
-						{
-							kcode_events[port] &= ~DC_DPAD_LEFT;
-							NOTICE_LOG(INPUT, "Added LEFT a ");
+						OtheAxis = input_mapper->get_axis_code(port,EMU_AXIS_DPAD1_X);
+						if ((JoyValues[OtheAxis]/256) <= -_deadzone){
+							InputsToUse[port] &= ~EMU_AXIS_DPAD1_X;
+						}else if ((JoyValues[OtheAxis]/256) >= _deadzone){
+							InputsToUse[port] &= ~(EMU_AXIS_DPAD1_X << 1);
 						}
 
-						if ((kcode[port] & DC_DPAD_RIGHT) == 0)
-						{
-							kcode_events[port] &= ~DC_DPAD_RIGHT;
-							NOTICE_LOG(INPUT, "Added RIGHT a ");
-						}
 					case DC_DPAD_LEFT:
 					case DC_DPAD_RIGHT:
-						if ((kcode[port] & DC_DPAD_UP) == 0)
-						{
-							kcode_events[port] &= ~DC_DPAD_UP;
-							NOTICE_LOG(INPUT, "Added UP a ");
-						}
-
-						if ((kcode[port] & DC_DPAD_DOWN) == 0)
-						{
-							kcode_events[port] &= ~DC_DPAD_DOWN;
-							NOTICE_LOG(INPUT, "Added DOWN a ");
+						OtheAxis = input_mapper->get_axis_code(port,EMU_AXIS_DPAD1_Y);
+						if ((JoyValues[OtheAxis]/256) <= -_deadzone){
+							InputsToUse[port] &= ~EMU_AXIS_DPAD1_Y;
+						}else if ((JoyValues[OtheAxis]/256) >= _deadzone){
+							InputsToUse[port] &= ~(EMU_AXIS_DPAD1_Y << 1);
 						}
 					}
 				}

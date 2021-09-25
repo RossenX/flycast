@@ -44,6 +44,7 @@ u8 rt[4];
 u8 lt[4];
 
 std::map<int, int> JoyValues;
+std::map<int, bool> ButtonStatus;
 
 std::vector<std::shared_ptr<GamepadDevice>> GamepadDevice::_gamepads;
 std::mutex GamepadDevice::_gamepads_mutex;
@@ -76,10 +77,10 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 	u32 LEFT = DC_DPAD_LEFT;
 	u32 RIGHT = DC_DPAD_RIGHT;
 
-	u32 _UP = DC_DPAD_UP|EMU_AXIS_DPAD_UP;
-	u32 _DOWN = DC_DPAD_DOWN|EMU_AXIS_DPAD_DOWN;
-	u32 _LEFT = DC_DPAD_LEFT|EMU_AXIS_DPAD_LEFT;
-	u32 _RIGHT = DC_DPAD_RIGHT|EMU_AXIS_DPAD_RIGHT;
+	u32 _UP = DC_DPAD_UP;
+	u32 _DOWN = DC_DPAD_DOWN;
+	u32 _LEFT = DC_DPAD_LEFT;
+	u32 _RIGHT = DC_DPAD_RIGHT;
 
 	if (((kcode[_maple_port]|kcode_events_temp2) & (LEFT | RIGHT)) == 0) {
 		kcode_events_temp2 |= (_LEFT | _RIGHT);
@@ -138,8 +139,8 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 		}
 
 	} // UP RIGHT
-	else if ((kcode[_maple_port] & (UP | RIGHT))==0) {
-		if ((kcode_lastframe[_maple_port] & (UP | LEFT))==0) {
+	else if ((kcode_lastframe[_maple_port] & (UP | RIGHT))==0) {
+		if ((kcode[_maple_port] & (UP | LEFT))==0) {
 			kcode[_maple_port] |= _RIGHT;
 			kcode_events[_maple_port] &= ~_UP;
 			NOTICE_LOG(INPUT,"UP LEFT > UP RIGHT");
@@ -155,6 +156,8 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 
 bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 {
+	ButtonStatus[code] = pressed;
+
 	u32 *InputsToUse;
 	if(isevent){InputsToUse = kcode_events;
 	}else{InputsToUse = kcode;}
@@ -178,23 +181,35 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 		{
 			if (pressed) InputsToUse[port] &= ~key;
 
-			if (isevent && !pressed)
+			if (isevent && pressed)
 			{
 				switch (key)
 				{
 				case DC_DPAD_UP:
 				case DC_DPAD_DOWN:
-					if (((kcode_events[port] & DC_DPAD_LEFT) == 0) || ((kcode_events[port] & DC_DPAD_RIGHT) == 0))
+					if (ButtonStatus[input_mapper->get_button_code(port,DC_DPAD_LEFT)])
 					{
-						kcode_events[port] &= ~key;
-						NOTICE_LOG(INPUT, "Added UP/DOWN");
+						kcode_events[port] &= ~DC_DPAD_LEFT;
+						NOTICE_LOG(INPUT, "Added LEFT");
+					}
+
+					if (ButtonStatus[input_mapper->get_button_code(port,DC_DPAD_RIGHT)])
+					{
+						kcode_events[port] &= ~DC_DPAD_RIGHT;
+						NOTICE_LOG(INPUT, "Added RIGHT");
 					}
 				case DC_DPAD_LEFT:
 				case DC_DPAD_RIGHT:
-					if (((kcode_events[port] & DC_DPAD_UP) == 0) || ((kcode_events[port] & DC_DPAD_DOWN) == 0))
+					if (ButtonStatus[input_mapper->get_button_code(port,DC_DPAD_UP)])
 					{
-						kcode_events[port] &= ~key;
-						NOTICE_LOG(INPUT, "Added LEFT/RIGHT");
+						kcode_events[port] &= ~DC_DPAD_UP;
+						NOTICE_LOG(INPUT, "Added UP");
+					}
+
+					if (ButtonStatus[input_mapper->get_button_code(port,DC_DPAD_DOWN)])
+					{
+						kcode_events[port] &= ~DC_DPAD_DOWN;
+						NOTICE_LOG(INPUT, "Added DOWN");
 					}
 				}
 			}
@@ -330,42 +345,36 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 					pressed = true;
 				}
 					
-				if (isevent && !pressed)
+				if (isevent && pressed)
 				{
 					switch (key)
 					{
 					case DC_DPAD_UP:
 					case DC_DPAD_DOWN:
-						if (((kcode_events[port] & DC_DPAD_LEFT) == 0) || ((kcode_events[port] & DC_DPAD_RIGHT) == 0))
+						if ((kcode[port] & DC_DPAD_LEFT) == 0)
 						{
-							if((kcode_lastframe[port] & DC_DPAD_UP)==0){
-								kcode_events[port] &= ~DC_DPAD_UP;
-								NOTICE_LOG(INPUT,"Added LEFT Analog");
-							}
-
-							if((kcode_lastframe[port] & DC_DPAD_DOWN)==0){
-								kcode_events[port] &= ~DC_DPAD_DOWN;
-								NOTICE_LOG(INPUT,"Added RIGHT Analog");
-							}
-							
+							kcode_events[port] &= ~DC_DPAD_LEFT;
+							NOTICE_LOG(INPUT, "Added LEFT a ");
 						}
-						break;
+
+						if ((kcode[port] & DC_DPAD_RIGHT) == 0)
+						{
+							kcode_events[port] &= ~DC_DPAD_RIGHT;
+							NOTICE_LOG(INPUT, "Added RIGHT a ");
+						}
 					case DC_DPAD_LEFT:
 					case DC_DPAD_RIGHT:
-						if (((kcode_events[port] & DC_DPAD_UP) == 0) || ((kcode_events[port] & DC_DPAD_DOWN) == 0)){
-							
-							if((kcode_lastframe[port] & DC_DPAD_LEFT)==0){
-								kcode_events[port] &= ~DC_DPAD_LEFT;
-								NOTICE_LOG(INPUT,"Added UP Analog");
-							}
-
-							if((kcode_lastframe[port] & DC_DPAD_RIGHT)==0){
-								kcode_events[port] &= ~DC_DPAD_RIGHT;
-								NOTICE_LOG(INPUT,"Added DOWN Analog");
-							}
-							
+						if ((kcode[port] & DC_DPAD_UP) == 0)
+						{
+							kcode_events[port] &= ~DC_DPAD_UP;
+							NOTICE_LOG(INPUT, "Added UP a ");
 						}
-						break;
+
+						if ((kcode[port] & DC_DPAD_DOWN) == 0)
+						{
+							kcode_events[port] &= ~DC_DPAD_DOWN;
+							NOTICE_LOG(INPUT, "Added DOWN a ");
+						}
 					}
 				}
 			}

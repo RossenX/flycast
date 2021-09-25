@@ -191,14 +191,7 @@ static void checkRawInput()
 
 void os_SetupInput()
 {
-#if defined(USE_SDL)
 	input_sdl_init();
-#else
-	XInputGamepadDevice::CreateDevices();
-	EventManager::listen(Event::Pause, emuEventCallback);
-	EventManager::listen(Event::Resume, emuEventCallback);
-	checkRawInput();
-#endif
 	if (config::UseRawInput)
 		rawinput::init();
 }
@@ -228,18 +221,8 @@ static void setupPath()
 	CreateDirectory(data_path.c_str(), NULL);
 }
 
-void UpdateInputState()
-{
-#if defined(USE_SDL)
-	input_sdl_handle();
-#else
-	for (int port = 0; port < 4; port++)
-	{
-		std::shared_ptr<XInputGamepadDevice> gamepad = XInputGamepadDevice::GetXInputDevice(port);
-		if (gamepad != nullptr)
-			gamepad->ReadInput();
-	}
-#endif
+void UpdateInputState(){
+input_sdl_handle();
 }
 
 static HWND hWnd;

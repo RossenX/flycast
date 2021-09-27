@@ -33,12 +33,15 @@ extern bool ShouldResize;
 
 void UpdateInputState();
 
+bool IsResizing = false;
+
 bool mainui_rend_frame()
 {
 	os_DoEvents();
 	if(gui_is_open())UpdateInputState();
 	
-	if(ShouldResize){
+	if(ShouldResize && !IsResizing){
+		IsResizing = true;
 		#ifdef USE_VULKAN
             theVulkanContext.SetResized();
 		#endif
@@ -46,6 +49,7 @@ bool mainui_rend_frame()
 			theDXContext.resize();
 		#endif
 		ShouldResize = false;
+		IsResizing = false;
 	}
 	
 	if (gui_is_open() || gui_state == GuiState::VJoyEdit)

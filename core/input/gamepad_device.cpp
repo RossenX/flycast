@@ -49,6 +49,8 @@ std::map<int, bool> ButtonStatus;
 std::vector<std::shared_ptr<GamepadDevice>> GamepadDevice::_gamepads;
 std::mutex GamepadDevice::_gamepads_mutex;
 
+extern bool ToggleFlycastGUI;
+
 #ifdef TEST_AUTOMATION
 #include "hw/sh4/sh4_sched.h"
 static FILE *record_input;
@@ -233,7 +235,7 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 				break;
 			case EMU_BTN_MENU:
 				if (pressed)
-					gui_open_settings();
+					ToggleFlycastGUI = true;
 				break;
 			case EMU_BTN_FFORWARD:
 				if (pressed && !gui_is_open())

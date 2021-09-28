@@ -30,6 +30,7 @@ bool mainui_enabled;
 u32 MainFrameCount;
 static bool forceReinit;
 extern bool ShouldResize;
+extern bool ToggleFlycastGUI;
 
 void UpdateInputState();
 
@@ -50,6 +51,11 @@ bool mainui_rend_frame()
 		#endif
 		ShouldResize = false;
 		IsResizing = false;
+	}
+	
+	if(ToggleFlycastGUI){
+		ToggleFlycastGUI = false;
+		gui_open_settings();
 	}
 	
 	if (gui_is_open() || gui_state == GuiState::VJoyEdit)

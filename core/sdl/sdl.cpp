@@ -41,6 +41,8 @@ static bool mouseCaptured;
 bool ShouldResize = false;
 bool ThreadCreated = false;
 
+bool ToggleFlycastGUI = false;
+
 static void sdl_open_joystick(int index)
 {
 	//SDL_Joystick *pJoystick = SDL_JoystickOpen(index);

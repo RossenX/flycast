@@ -1,6 +1,8 @@
 [submodule "core/deps/SDL"]
+	ignore = dirty
 	path = core/deps/SDL
 	url = https://github.com/libsdl-org/SDL.git
 [submodule "core/deps/libchdr"]
+	ignore = dirty
 	path = core/deps/libchdr
 	url = https://github.com/rtissera/libchdr.git

@@ -2412,7 +2412,7 @@ void gui_display_osd()
 		if (config::FloatVMUs)
 			display_vmus();
 //		gui_plot_render_time(settings.display.width, settings.display.height);
-		if (ggpo::active() && config::NetworkStats)
+		if (ggpo::active() && config::NetworkStats){
 			ggpo::displayStats();
 		}
 

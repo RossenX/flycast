@@ -31,6 +31,7 @@ u32 MainFrameCount;
 static bool forceReinit;
 extern bool ShouldResize;
 extern bool ToggleFlycastGUI;
+extern bool doDaQuit;
 
 void UpdateInputState();
 
@@ -39,6 +40,10 @@ bool IsResizing = false;
 bool mainui_rend_frame()
 {
 	os_DoEvents();
+	if(doDaQuit){
+		dc_exit();
+	}
+	
 	if(gui_is_open())UpdateInputState();
 	
 	if(ShouldResize && !IsResizing){

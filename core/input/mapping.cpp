@@ -54,9 +54,9 @@ button_list[] =
 	{ DC_AXIS_DOWN, "compat", "btn_analog_down" },
 	{ DC_AXIS_LEFT, "compat", "btn_analog_left" },
 	{ DC_AXIS_RIGHT, "compat", "btn_analog_right" },
-	{ DC_BTN_RELOAD, "dreamcast", "reload" },
+	{ DC_BTN_RELOAD, "dreamcast", "reload" }
 
-	// Macros Naomi
+	/* Macros Naomi
 	{ BC_03, "compat", "BC_03" },
 	{ BC_14, "compat", "BC_14" },
 	{ BC_25, "compat", "BC_25" },
@@ -77,6 +77,7 @@ button_list[] =
 	{ BC_BR, "compat", "BC_BR" },
 	{ BC_XYL, "compat", "BC_XYL" },
 	{ BC_ABR, "compat", "BC_ABR" }
+	*/
 
 };
 
@@ -152,6 +153,7 @@ void InputMapping::set_button(u32 port, DreamcastKey id, u32 code)
 	if (id != EMU_BTN_NONE)
 	{
 		clear_button(port, id);
+		NOTICE_LOG(INPUT,"Set Port %d Code %d ID %d",port,code,id);
 		buttons[port][code] = id;
 		dirty = true;
 	}
@@ -197,7 +199,7 @@ static DreamcastKey getKeyId(const std::string& name)
 	return EMU_BTN_NONE;
 }
 
-void InputMapping::load(FILE* fp)
+void InputMapping::load(FILE* fp, bool arcade)
 {
 	ConfigFile mf;
 	mf.parse(fp);
@@ -207,14 +209,15 @@ void InputMapping::load(FILE* fp)
 	int dz = mf.get_int("emulator", "dead_zone", 25);
 	dz = std::min(dz, 100);
 	dz = std::max(dz, 0);
-	this->dead_zone = (float)dz / 100.f;
-
+	this->dead_zone = dz;
+	NOTICE_LOG(INPUT,"DEADZONE: %d", this->dead_zone);
 	version = mf.get_int("emulator", "version", 1);
 	if (version < 3)
 	{
-		loadv1(mf);
+		loadv1(mf,arcade);
 		return;
 	}
+	
 	int bindIndex = 0;
 	while (true)
 	{
@@ -243,6 +246,7 @@ void InputMapping::load(FILE* fp)
 		DreamcastKey id = getKeyId(key);
 		set_button(port, id, code);
 	}
+
 	bindIndex = 0;
 	while (true)
 	{
@@ -275,7 +279,7 @@ void InputMapping::load(FILE* fp)
 	dirty = false;
 }
 
-void InputMapping::loadv1(ConfigFile& mf)
+void InputMapping::loadv1(ConfigFile& mf, bool arcade)
 {
 	for (int port = 0; port < 4; port++)
 	{
@@ -290,11 +294,22 @@ void InputMapping::loadv1(ConfigFile& mf)
 			if (button_code >= 0)
 			{
 				DreamcastKey id = button_list[i].id;
-				// remap service and test buttons to their new aliases
-				if (id == DC_BTN_C)
-					id = DC_DPAD2_UP;
-				else if (id == DC_BTN_Z)
-					id = DC_DPAD2_DOWN;
+				// remap service and test buttons to their new aliases and others that changed
+				if(arcade){
+					if (id == DC_BTN_X)
+						id = DC_BTN_C;
+					else if (id == DC_BTN_Y)
+						id = DC_BTN_X;
+					else if (id == DC_DPAD2_UP)
+						id = DC_BTN_Y;
+					else if (id == DC_DPAD2_DOWN)
+						id = DC_BTN_Z;
+					else if (id == DC_BTN_C)
+						id = DC_DPAD2_UP;
+					else if (id == DC_BTN_Z)
+						id = DC_DPAD2_DOWN;
+				}
+				
 				this->set_button(port, id, button_code);
 			}
 		}
@@ -309,22 +324,54 @@ void InputMapping::loadv1(ConfigFile& mf)
 			int axis_code = mf.get_int(axis_list[i].section, option, -1);
 			if (axis_code >= 0)
 			{
+				DreamcastKey id = axis_list[i].id;
 				if (port == 0)
 					option = axis_list[i].option_inverted;
 				else
 					option = axis_list[i].option_inverted + std::to_string(port);
+
 				bool inverted = mf.get_bool(axis_list[i].section_inverted, option, false);
 
-				this->set_axis(port, axis_list[i].id, axis_code, !inverted);
+				if(arcade){
+					if (id == DC_BTN_X)
+						id = DC_BTN_C;
+					else if (id == DC_BTN_Y)
+						id = DC_BTN_X;
+					else if (id == DC_DPAD2_UP)
+						id = DC_BTN_Y;
+					else if (id == DC_DPAD2_DOWN)
+						id = DC_BTN_Z;
+					else if (id == DC_BTN_C)
+						id = DC_DPAD2_UP;
+					else if (id == DC_BTN_Z)
+						id = DC_DPAD2_DOWN;
+				}
 
-				if (axis_list[i].id == DC_AXIS_RIGHT)
+				//Fix the Analog to Digital Conversion
+				if (id == DC_DPAD_UP || id == DC_DPAD_LEFT){
+					inverted = !inverted;
+				}
+
+				this->set_axis(port, id, axis_code, !inverted);
+
+				if (id == DC_AXIS_RIGHT)
 					this->set_axis(port, DC_AXIS_LEFT, axis_code, inverted);
-				else if (axis_list[i].id == DC_AXIS_DOWN)
+
+				else if (id == DC_AXIS_DOWN)
 					this->set_axis(port, DC_AXIS_UP, axis_code, inverted);
-				else if (axis_list[i].id == DC_AXIS2_RIGHT)
+
+				else if (id == DC_AXIS2_RIGHT)
 					this->set_axis(port, DC_AXIS2_LEFT, axis_code, inverted);
-				else if (axis_list[i].id == DC_AXIS2_DOWN)
+
+				else if (id == DC_AXIS2_DOWN)
 					this->set_axis(port, DC_AXIS2_UP, axis_code, inverted);
+
+				else if (id == DC_DPAD_UP)
+					this->set_axis(port, DC_DPAD_DOWN, axis_code, inverted);
+
+				else if (id == DC_DPAD_LEFT)
+					this->set_axis(port, DC_DPAD_RIGHT, axis_code, inverted);
+				
 			}
 		}
 	}
@@ -367,7 +414,8 @@ std::shared_ptr<InputMapping> InputMapping::LoadMapping(const char *name)
 	if (fp == NULL)
 		return NULL;
 	std::shared_ptr<InputMapping> mapping = std::make_shared<InputMapping>();
-	mapping->load(fp);
+	std::string s = name;
+	mapping->load(fp,s.find("_arcade.cfg") != std::string::npos);
 	std::fclose(fp);
 	loaded_mappings[name] = mapping;
 
@@ -434,7 +482,7 @@ bool InputMapping::save(const char *name)
 	ConfigFile mf;
 
 	mf.set("emulator", "mapping_name", this->name);
-	mf.set_int("emulator", "dead_zone", (int)std::round(this->dead_zone * 100.f));
+	mf.set_int("emulator", "dead_zone", this->dead_zone);
 	mf.set_int("emulator", "version", 3);
 
 	int bindIndex = 0;

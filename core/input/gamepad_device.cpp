@@ -44,7 +44,7 @@ u8 rt[4];
 u8 lt[4];
 
 std::map<int, int> JoyValues;
-std::map<int, bool> ButtonStatus;
+std::map<DreamcastKey, bool> ButtonStatus;
 
 std::vector<std::shared_ptr<GamepadDevice>> GamepadDevice::_gamepads;
 std::mutex GamepadDevice::_gamepads_mutex;
@@ -66,7 +66,6 @@ void GamepadDevice::gamepad_btn_reset(){
  	lt[_maple_port] = 0;
 
 }
-
 
 void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, does it work? also yes. Might clean up later make pretty or optimize
 	
@@ -157,99 +156,73 @@ void GamepadDevice::gamepad_btn_cleanup(){ // Is the cleanup code messy? Yes, do
 	memcpy(&kcode_lastframe[_maple_port],&kcode[_maple_port],sizeof(kcode[_maple_port]));
 }
 
-bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
+bool GamepadDevice::handleButtonInput(int port, DreamcastKey key, bool pressed, bool isevent)
 {
-	ButtonStatus[code] = pressed;
+	ButtonStatus[key] = pressed;
+
+	if (gui_is_open()){return false;}
+
+	if (key == EMU_BTN_NONE)
+		return false;
 
 	u32 *InputsToUse;
-	if(isevent){InputsToUse = kcode_events;
-	}else{InputsToUse = kcode;}
-
-	if (_input_detected != nullptr && _detecting_button
-			&& os_GetSeconds() >= _detection_start_time && pressed)
-	{
-		_input_detected(code, false, false);
-		_input_detected = nullptr;
-		return true;
-	}
-
-	if (!input_mapper || _maple_port < 0 || _maple_port > (int)ARRAY_SIZE(kcode) || gui_is_open())
-		return false;
+	if (isevent)
+		InputsToUse = kcode_events;
+	else
+		InputsToUse = kcode;
 
 	if (key <= DC_BTN_RELOAD)
 	{
-		if (key == EMU_BTN_NONE)
-			return false;
-
-		if (key <= DC_BTN_RELOAD)
+		if (pressed){
+			InputsToUse[port] &= ~key;
+		}
+			
+		if (isevent && pressed)
 		{
-			if (pressed) InputsToUse[port] &= ~key;
-
-			if (isevent && pressed)
+			switch (key)
 			{
-				switch (key)
-				{
-				case DC_DPAD_UP:
-				case DC_DPAD_DOWN:
-					if (ButtonStatus[input_mapper->get_button_code(port,DC_DPAD_LEFT)])
-					{
-						kcode_events[port] &= ~DC_DPAD_LEFT;
-						NOTICE_LOG(INPUT, "Added LEFT");
-					}
-
-					if (ButtonStatus[input_mapper->get_button_code(port,DC_DPAD_RIGHT)])
-					{
-						kcode_events[port] &= ~DC_DPAD_RIGHT;
-						NOTICE_LOG(INPUT, "Added RIGHT");
-					}
-				case DC_DPAD_LEFT:
-				case DC_DPAD_RIGHT:
-					if (ButtonStatus[input_mapper->get_button_code(port,DC_DPAD_UP)])
-					{
-						kcode_events[port] &= ~DC_DPAD_UP;
-						NOTICE_LOG(INPUT, "Added UP");
-					}
-
-					if (ButtonStatus[input_mapper->get_button_code(port,DC_DPAD_DOWN)])
-					{
-						kcode_events[port] &= ~DC_DPAD_DOWN;
-						NOTICE_LOG(INPUT, "Added DOWN");
-					}
-				}
+			case DC_DPAD_UP:
+			case DC_DPAD_DOWN:
+				if (ButtonStatus[DC_DPAD_LEFT])
+					kcode_events[port] &= ~DC_DPAD_LEFT;
+				
+				if (ButtonStatus[DC_DPAD_RIGHT])
+					kcode_events[port] &= ~DC_DPAD_RIGHT;
+				
+			case DC_DPAD_LEFT:
+			case DC_DPAD_RIGHT:
+				if (ButtonStatus[DC_DPAD_UP])
+					kcode_events[port] &= ~DC_DPAD_UP;
+				
+				if (ButtonStatus[DC_DPAD_DOWN])
+					kcode_events[port] &= ~DC_DPAD_DOWN;
+				
 			}
-
-#ifdef TEST_AUTOMATION
-		if (record_input != NULL)
-			fprintf(record_input, "%ld button %x %04x\n", sh4_sched_now64(), port, kcode[port]);
-#endif
+		}
+		return true;
 	}
 	else
 	{
 		switch (key)
 		{
-			// If this is GGPO set the digital controls instead
-			int _joyx = 0;
-			int _joyy = 0;
-			switch (key)
-			{
-			case EMU_BTN_ESCAPE:
-				if (pressed)
-					dc_exit();
-				break;
-			case EMU_BTN_MENU:
-				if (pressed)
-					ToggleFlycastGUI = true;
-				break;
-			case EMU_BTN_FFORWARD:
-				if (pressed && !gui_is_open())
-					settings.input.fastForwardMode = !settings.input.fastForwardMode && !settings.online;
-				break;
-			case DC_AXIS_LT:
-				lt[port] = pressed ? 255 : 0;
-				break;
-			case DC_AXIS_RT:
-				rt[port] = pressed ? 255 : 0;
-				break;
+		case EMU_BTN_ESCAPE:
+			if (pressed)
+				dc_exit();
+			break;
+		case EMU_BTN_MENU:
+			if (pressed)
+				ToggleFlycastGUI = true;
+			break;
+		case EMU_BTN_FFORWARD:
+			if (pressed && !gui_is_open())
+				settings.input.fastForwardMode = !settings.input.fastForwardMode && !settings.online;
+			break;
+		case DC_AXIS_LT:
+			lt[port] = pressed ? 255 : 0;
+			break;
+		case DC_AXIS_RT:
+			rt[port] = pressed ? 255 : 0;
+			break;
 
 		case DC_AXIS_UP:
 		case DC_AXIS_DOWN:
@@ -268,19 +241,19 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 			buttonToAnalogInput<DC_AXIS2_LEFT, DIGANA2_LEFT, DIGANA2_RIGHT>(port, key, pressed, joyrx[port]);
 			break;
 
-			default:
-				return false;
-			}
-			
+		default:
+			return false;
 		}
-	}
-	DEBUG_LOG(INPUT, "%d: BUTTON %s %d. kcode=%x", port, pressed ? "down" : "up", key, kcode[port]);
+		DEBUG_LOG(INPUT, "%d: BUTTON %s %d. kcode=%x", port, pressed ? "down" : "up", key, kcode[port]);
 
-	return true;
+		return true;
+	}
 }
 
-bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
+bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed, bool isevent)
 {
+	if(pressed){NOTICE_LOG(INPUT,"BUTTON DOWN %d",code);}
+	
 	if (_input_detected != nullptr && _detecting_button
 			&& os_GetSeconds() >= _detection_start_time && pressed)
 	{
@@ -297,22 +270,23 @@ bool GamepadDevice::gamepad_btn_input(u32 code, bool pressed)
 		for (int port = 0; port < 4; port++)
 		{
 			DreamcastKey key = input_mapper->get_button_id(port, code);
-			rc = handleButtonInput(port, key, pressed) || rc;
+			rc = handleButtonInput(port, key, pressed, isevent) || rc;
 		}
 	}
 	else
 	{
 		DreamcastKey key = input_mapper->get_button_id(0, code);
-		rc = handleButtonInput(_maple_port, key, pressed);
+		rc = handleButtonInput(_maple_port, key, pressed, isevent);
 	}
 
 	return rc;
 }
 
-bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
+bool GamepadDevice::gamepad_axis_input(u32 code, int value, bool isevent)
 {
-	if (input_mapper->get_axis_inverted(0, code)) value *= -1;
-	
+
+	bool positive = value >= 0;
+
 	s32 v; // The final Value
 	if(code > 3){
 		v = value / 128; // Should make a value between 0 to 256
@@ -329,8 +303,8 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 	if(code <= 3){_deadzone /= 2;} // Sticks have half the deadzone because they only go up to 128
 
 	// This little bit looks to be for the keymapping
-	if (_input_detected != NULL && (v >= _deadzone || v <= -_deadzone)){
-		_input_detected(code);
+	if (_input_detected != NULL && abs(v) >= _deadzone){
+		_input_detected(code,true,positive);
 		_input_detected = NULL;
 		return true;
 	}
@@ -345,80 +319,19 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 
 	// This is from an event and it's on it's way back so we don't register these as button presses, otherwise axis will register an input on the way up and down
 	bool IgnorePress = false;
-	if(abs(JoyValues[code]) > abs(value) && isevent){IgnorePress = true;}
+	if(abs(JoyValues[code]) >= abs(value) && isevent){IgnorePress = true;}
 	JoyValues[code] = value;
 
 	auto handle_axis = [&](u32 port, DreamcastKey key, int v)
 	{
-		if ((int)key < 0x10000) // Key Codes DIGITAL
+		if ((key & DC_BTN_GROUP_MASK) == DC_AXIS_TRIGGERS)	// Triggers
 		{
-			if (code > 3)
-			{
-				if (v >= _deadzone && !IgnorePress){
-					InputsToUse[port] |= key;
-				}
-			}
+			if (key == DC_AXIS_LT)
+				lt[port] = v;
+			else if (key == DC_AXIS_RT)
+				rt[port] = v;
 			else
-			{
-				bool pressed = false;
-				if (v <= -_deadzone && !IgnorePress){
-					InputsToUse[port] &= ~key;
-					pressed = true;
-				}else if (v >= _deadzone && !IgnorePress){
-					InputsToUse[port] &= ~(key << 1);
-					pressed = true;
-				}
-					
-				if (isevent && pressed)
-				{
-					u32 OtheAxis;
-					switch (key)
-					{
-					case DC_DPAD_UP:
-					case DC_DPAD_DOWN:
-						OtheAxis = input_mapper->get_axis_code(port,EMU_AXIS_DPAD1_X);
-						if ((JoyValues[OtheAxis]/256) <= -_deadzone){
-							InputsToUse[port] &= ~EMU_AXIS_DPAD1_X;
-						}else if ((JoyValues[OtheAxis]/256) >= _deadzone){
-							InputsToUse[port] &= ~(EMU_AXIS_DPAD1_X << 1);
-						}
-
-					case DC_DPAD_LEFT:
-					case DC_DPAD_RIGHT:
-						OtheAxis = input_mapper->get_axis_code(port,EMU_AXIS_DPAD1_Y);
-						if ((JoyValues[OtheAxis]/256) <= -_deadzone){
-							InputsToUse[port] &= ~EMU_AXIS_DPAD1_Y;
-						}else if ((JoyValues[OtheAxis]/256) >= _deadzone){
-							InputsToUse[port] &= ~(EMU_AXIS_DPAD1_Y << 1);
-						}
-					}
-				}
-			}
-		}
-		else if (((int)key >> 16) == 1)	// Triggers
-		{
-			if(code <= 3){v = abs(value / 128);}
-	
-			if(v < 0){v = 0;}
-			if(v > 255){v = 255;}
-
-			if (key == DC_AXIS_LT){
-				if(abs(v) >= _deadzone){
-					lt[port] = (u8)v;
-					NOTICE_LOG(INPUT,"LT: %d %d",lt[port],v);
-				}
-			}
-			else if (key == DC_AXIS_RT){
-				if(abs(v) >= _deadzone){
-					rt[port] = (u8)v;
-					NOTICE_LOG(INPUT,"RT: %d %d",lt[port],v);
-				}
-			}
-			else
-			{
 				return false;
-			}
-			
 		}
 		else if ((key & DC_BTN_GROUP_MASK) == DC_AXIS_STICKS) // Analog axes
 		{
@@ -462,14 +375,49 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 			default:
 				return false;
 			}
-			
-			if (abs(v) > _deadzone && !IgnorePress) *this_axis = (s8)v;
-			
+
+			if(abs(v) >= _deadzone){
+				*this_axis = abs(v) * axisDirection;
+			}
 		}
 		else if (key != EMU_BTN_NONE && key <= DC_BTN_RELOAD) // Map triggers to digital buttons
 		{
-			if (abs(v) >= _deadzone && !IgnorePress)
-				InputsToUse[port] &= ~(key & ~0x40000); // button pressed
+			if (std::abs(v) >= _deadzone && !IgnorePress)
+			{
+				kcode[port] &= ~key; // button released
+				ButtonStatus[key] = true;
+
+				if (isevent)
+				{
+					switch (key)
+					{
+					case DC_DPAD_UP:
+					case DC_DPAD_DOWN:
+						if (ButtonStatus[DC_DPAD_LEFT])
+							kcode_events[port] &= ~DC_DPAD_LEFT;
+
+						if (ButtonStatus[DC_DPAD_RIGHT])
+							kcode_events[port] &= ~DC_DPAD_RIGHT;
+
+					case DC_DPAD_LEFT:
+					case DC_DPAD_RIGHT:
+						if (ButtonStatus[DC_DPAD_UP])
+							kcode_events[port] &= ~DC_DPAD_UP;
+
+						if (ButtonStatus[DC_DPAD_DOWN])
+							kcode_events[port] &= ~DC_DPAD_DOWN;
+					}
+				}
+			}else{
+				ButtonStatus[key] = false;
+			}
+		}
+		else if ((key & DC_BTN_GROUP_MASK) == EMU_BUTTONS) // Map triggers to emu buttons
+		{
+			if (std::abs(v) > _deadzone && !IgnorePress)
+			{
+				handleButtonInput(port, key, true);
+			}
 		}
 		else
 			return false;
@@ -485,7 +433,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 			DreamcastKey key = input_mapper->get_axis_id(port, code, !positive);
 			handle_axis(port, key, 0);
 			key = input_mapper->get_axis_id(port, code, positive);
-			rc = handle_axis(port, key, value) || rc;
+			rc = handle_axis(port, key, v) || rc;
 		}
 	}
 	else
@@ -494,7 +442,7 @@ bool GamepadDevice::gamepad_axis_input(int code, int value, bool isevent)
 		// Reset opposite axis to 0
 		handle_axis(_maple_port, key, 0);
 		key = input_mapper->get_axis_id(0, code, positive);
-		rc = handle_axis(_maple_port, key, value);
+		rc = handle_axis(_maple_port, key, v);
 	}
 
 	return rc;

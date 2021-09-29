@@ -41,7 +41,7 @@ public:
 	void gamepad_btn_cleanup();
 
 	virtual bool gamepad_btn_input(u32 code, bool pressed, bool isevent = false);
-	virtual bool gamepad_axis_input(int code, int value, bool isevent = false);
+	virtual bool gamepad_axis_input(u32 code, int value, bool isevent = false);
 	virtual ~GamepadDevice() = default;
 	
 	void detect_btn_input(input_detected_cb button_pressed);
@@ -102,7 +102,7 @@ protected:
 	bool _rumble_enabled = true;
 
 private:
-	bool handleButtonInput(int port, DreamcastKey key, bool pressed);
+	bool handleButtonInput(int port, DreamcastKey key, bool pressed, bool isevent = false);
 	std::string make_mapping_filename(bool instance = false);
 	std::string make_mapping_filename(bool instance, int system);
 

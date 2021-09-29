@@ -34,7 +34,7 @@ public:
 	InputMapping() = default;
 	InputMapping(const InputMapping& other) {
 		name = other.name;
-		dead_zone = int((255 / 100) * other.dead_zone);
+		dead_zone = other.dead_zone;
 		for (int port = 0; port < 4; port++)
 		{
 			buttons[port] = other.buttons[port];
@@ -43,7 +43,7 @@ public:
 	}
 
 	std::string name;
-	float dead_zone = 0.1f;
+	int dead_zone = 25;
 	int version = 3;
 
 	DreamcastKey get_button_id(u32 port, u32 code)
@@ -73,7 +73,7 @@ public:
 	void set_axis(u32 port, DreamcastKey id, u32 code, bool positive);
 	void set_axis(DreamcastKey id, u32 code, bool positive) { set_axis(0, id, code, positive); }
 
-	void load(FILE* fp);
+	void load(FILE* fp, bool arcade = false);
 	bool save(const char *name);
 
 	void set_dirty();
@@ -88,7 +88,7 @@ protected:
 	bool dirty = false;
 
 private:
-	void loadv1(emucfg::ConfigFile& mf);
+	void loadv1(emucfg::ConfigFile& mf, bool arcade = false);
 
 	std::map<u32, DreamcastKey> buttons[4];
 	std::map<std::pair<u32, bool>, DreamcastKey> axes[4];

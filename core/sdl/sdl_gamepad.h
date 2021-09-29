@@ -163,17 +163,16 @@ public:
 
 		if (SDL_IsGameController(joystick_idx))
 		{
-			sdl_controller = SDL_GameControllerOpen(joystick_idx);
-			SDL_GameControllerButtonBind bind = SDL_GameControllerGetBindForAxis(sdl_controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+			SDL_GameControllerButtonBind bind = SDL_GameControllerGetBindForAxis(sdl_joystick, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
 			if (bind.bindType == SDL_CONTROLLER_BINDTYPE_AXIS)
 				leftTrigger = bind.value.axis;
-			bind = SDL_GameControllerGetBindForAxis(sdl_controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+			bind = SDL_GameControllerGetBindForAxis(sdl_joystick, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
 			if (bind.bindType == SDL_CONTROLLER_BINDTYPE_AXIS)
 				rightTrigger = bind.value.axis;
 		}
 
 		if (!find_mapping())
-			input_mapper = std::make_shared<DefaultInputMapping<>>(sdl_controller);
+			input_mapper = std::make_shared<DefaultInputMapping<>>(sdl_joystick);
 		else
 			INFO_LOG(INPUT, "using custom mapping '%s'", input_mapper->name.c_str());
 		sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_joystick));
@@ -183,13 +182,6 @@ public:
 			SDL_HapticClose(sdl_haptic);
 			sdl_haptic = NULL;
 		}
-	}
-
-	bool gamepad_axis_input(u32 code, int value) override
-	{
-		if (code == leftTrigger || code == rightTrigger)
-			value = (u16)(value + 32768) / 2;
-		return GamepadDevice::gamepad_axis_input(code, value);
 	}
 
 	void rumble(float power, float inclination, u32 duration_ms) override
@@ -221,9 +213,7 @@ public:
 		INFO_LOG(INPUT, "SDL: Joystick '%s' on port %d disconnected", _name.c_str(), maple_port());
 		if (sdl_haptic != nullptr)
 			SDL_HapticClose(sdl_haptic);
-		if (sdl_controller != nullptr)
-			SDL_GameControllerClose(sdl_controller);
-		SDL_JoystickClose(sdl_joystick);
+		SDL_GameControllerClose(sdl_joystick);
 		GamepadDevice::Unregister(sdl_gamepads[sdl_joystick_instance]);
 		sdl_gamepads.erase(sdl_joystick_instance);
 	}
@@ -232,110 +222,51 @@ public:
 	{
 		static struct
 		{
-			const char *sdlButton;
+			const u32 sdlButton;
 			const char *label;
 		} buttonsTable[] =
 		{
-				{ "a", "A" },
-				{ "b", "B" },
-				{ "x", "X" },
-				{ "y", "Y" },
-				{ "back", "Back" },
-				{ "guide", "Guide" },
-				{ "start", "Start" },
-				{ "leftstick", "L3" },
-				{ "rightstick", "R3" },
-				{ "leftshoulder", "L1" },
-				{ "rightshoulder", "R1" },
-				{ "dpup", "DPad Up" },
-				{ "dpdown", "DPad Down" },
-				{ "dpleft", "DPad Left" },
-				{ "dpright", "DPad Right" },
-				{ "misc1", "Misc" },
-				{ "paddle1", "Paddle 1" },
-				{ "paddle2", "Paddle 2" },
-				{ "paddle3", "Paddle 3" },
-				{ "paddle4", "Paddle 4" },
-				{ "touchpad", "Touchpad" },
+				{ 0, "b0" },
+				{ 1, "b1" },
+				{ 2, "b2" },
+				{ 3, "b3" },
+				{ 4, "b4" },
+				{ 5, "b5" },
+				{ 6, "b6" },
+				{ 7, "b7" },
+				{ 8, "b8" },
+				{ 8, "b9" },
+				{ 10, "b10" },
+				{ 11, "b11" },
+				{ 12, "b12" },
+				{ 13, "b13" },
+				{ 14, "b14" },
+				{ 15, "b15" },
+				{ 16, "b16" },
+				{ 17, "b17" },
+				{ 18, "b18" },
+				{ 19, "b19" },
+				{ 20, "b20" },
 		};
-		for (SDL_GameControllerButton button = SDL_CONTROLLER_BUTTON_A; button < SDL_CONTROLLER_BUTTON_MAX; button = (SDL_GameControllerButton)(button + 1))
-		{
-			SDL_GameControllerButtonBind bind = SDL_GameControllerGetBindForButton(sdl_controller, button);
-			if (bind.bindType == SDL_CONTROLLER_BINDTYPE_BUTTON && bind.value.button == (int)code)
-			{
-				const char *sdlButton = SDL_GameControllerGetStringForButton(button);
-				if (sdlButton == nullptr)
-					return nullptr;
-				for (const auto& button : buttonsTable)
-					if (!strcmp(button.sdlButton, sdlButton))
-						return button.label;
-				return sdlButton;
-			}
-			if (bind.bindType == SDL_CONTROLLER_BINDTYPE_HAT && (code >> 8) - 1 == (u32)bind.value.hat.hat)
-			{
-				int hat;
-				const char *name;
-				switch (code & 0xff)
-				{
-				case 0:
-					hat = SDL_HAT_UP;
-					name =  "DPad Up";
-					break;
-				case 1:
-					hat = SDL_HAT_DOWN;
-					name =  "DPad Down";
-					break;
-				case 2:
-					hat = SDL_HAT_LEFT;
-					name =  "DPad Left";
-					break;
-				case 3:
-					hat = SDL_HAT_RIGHT;
-					name =  "DPad Right";
-					break;
-				default:
-					hat = 0;
-					name = nullptr;
-					break;
-				}
-				if (hat == bind.value.hat.hat_mask)
-					return name;
-			}
-		}
-		return nullptr;
+		return buttonsTable[code].label;
 	}
 
 	const char *get_axis_name(u32 code) override
 	{
 		static struct
 		{
-			const char *sdlAxis;
+			const u32 sdlButton;
 			const char *label;
-		} axesTable[] =
+		} buttonsTable[] =
 		{
-				{ "leftx", "Left Stick X" },
-				{ "lefty", "Left Stick Y" },
-				{ "rightx", "Right Stick X" },
-				{ "righty", "Right Stick Y" },
-				{ "lefttrigger", "L2" },
-				{ "righttrigger", "R2" },
+				{ 0, "a0" },
+				{ 1, "a1" },
+				{ 2, "a2" },
+				{ 3, "a3" },
+				{ 4, "a4" },
+				{ 5, "a5" },
 		};
-
-		for (SDL_GameControllerAxis axis = SDL_CONTROLLER_AXIS_LEFTX; axis < SDL_CONTROLLER_AXIS_MAX; axis = (SDL_GameControllerAxis)(axis + 1))
-		{
-			SDL_GameControllerButtonBind bind = SDL_GameControllerGetBindForAxis(sdl_controller, axis);
-			if (bind.bindType == SDL_CONTROLLER_BINDTYPE_AXIS && bind.value.axis == (int)code)
-			{
-				const char *sdlAxis = SDL_GameControllerGetStringForAxis(axis);
-				if (sdlAxis == nullptr)
-					return nullptr;
-				for (const auto& axis : axesTable)
-					if (!strcmp(axis.sdlAxis, sdlAxis))
-						return axis.label;
-				return sdlAxis;
-			}
-		}
-		return nullptr;
+		return buttonsTable[code].label;
 	}
 
 	void resetMappingToDefault(bool arcade, bool gamepad) override
@@ -344,12 +275,12 @@ public:
 		if (arcade)
 		{
 			if (gamepad)
-				input_mapper = std::make_shared<DefaultInputMapping<true, true>>(sdl_controller);
+				input_mapper = std::make_shared<DefaultInputMapping<true, true>>(sdl_joystick);
 			else
-				input_mapper = std::make_shared<DefaultInputMapping<true, false>>(sdl_controller);
+				input_mapper = std::make_shared<DefaultInputMapping<true, false>>(sdl_joystick);
 		}
 		else
-			input_mapper = std::make_shared<DefaultInputMapping<false, false>>(sdl_controller);
+			input_mapper = std::make_shared<DefaultInputMapping<false, false>>(sdl_joystick);
 	}
 
 
@@ -378,7 +309,6 @@ private:
 	SDL_Haptic *sdl_haptic;
 	float vib_inclination = 0;
 	double vib_stop_time = 0;
-	SDL_GameController *sdl_controller = nullptr;
 	u32 leftTrigger = ~0;
 	u32 rightTrigger = ~0;
 	static std::map<SDL_JoystickID, std::shared_ptr<SDLGamepad>> sdl_gamepads;

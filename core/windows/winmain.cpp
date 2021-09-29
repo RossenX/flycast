@@ -744,20 +744,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	emu.term();
 
 	os_UninstallFaultHandler();
-
-#ifdef USE_SDL
 	sdl_window_destroy();
-#else
-	TermRenderApi();
-	destroyMainWindow();
-	cfgSaveBool("window", "maximized", window_maximized);
-	if (!window_maximized && settings.display.width != 0 && settings.display.height != 0)
-	{
-		cfgSaveInt("window", "width", settings.display.width);
-		cfgSaveInt("window", "height", settings.display.height);
-	}
-#endif
-
 	SDL_Quit();
 	return 0;
 }

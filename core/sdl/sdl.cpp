@@ -40,6 +40,7 @@ static bool gameRunning;
 static bool mouseCaptured;
 bool ShouldResize = false;
 bool ThreadCreated = false;
+bool doDaQuit = false;
 
 bool ToggleFlycastGUI = false;
 
@@ -234,14 +235,14 @@ void do_sdl()
 		// Buttons
 		for (int i = 0; i < 22; i++){
 			if(SDL_GameControllerGetButton(gamepad->sdl_joystick,(SDL_GameControllerButton)i) != 0){
-				gamepad->gamepad_btn_input(i, true);
+				gamepad->gamepad_btn_input(i, true,false);
 			}
 		}
 
 		// Axis check these first, becuase they can unset button.
 		for (int i = 0; i < 6; i++){
 			int JoyValue = SDL_GameControllerGetAxis(gamepad->sdl_joystick,(SDL_GameControllerAxis)i);
-			gamepad->gamepad_axis_input(i,JoyValue);
+			gamepad->gamepad_axis_input((u32)i,JoyValue,false);
 		}
 	}
 
@@ -264,22 +265,19 @@ void do_sdl()
 	}
 }
 
-void SDL_InputThread() {
-
-	//printf("Threaded Inputs Started\n");
+void SDL_InputThread()
+{
 	ThreadCreated = true;
-	bool doDaQuit = false;
-	
+	doDaQuit = false;
+
 	while (!doDaQuit)
 	{
 		SDL_Event event;
 		while (SDL_WaitEvent(&event))
 		{
 			switch (event.type)
-		{
-#if !defined(__APPLE__)
+			{
 			case SDL_QUIT:
-				dc_exit();
 				doDaQuit = true;
 				break;
 
@@ -289,7 +287,8 @@ void SDL_InputThread() {
 				if (event.key.repeat == 0)
 				{
 					// Exit FullScreen when pressing Escape
-					if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && window_fullscreen){
+					if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && window_fullscreen)
+					{
 						SDL_SetWindowFullscreen(window, 0);
 						SDL_ShowCursor(SDL_ENABLE);
 						window_fullscreen = !window_fullscreen;
@@ -316,7 +315,7 @@ void SDL_InputThread() {
 					}
 					else if (!config::UseRawInput)
 					{
-						sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN,0,true);
+						sdl_keyboard->keyboard_input(event.key.keysym.scancode, event.type == SDL_KEYDOWN, 0, true);
 					}
 				}
 				break;
@@ -324,10 +323,7 @@ void SDL_InputThread() {
 				gui_keyboard_inputUTF8(event.text.text);
 				break;
 			case SDL_WINDOWEVENT:
-				if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
-						|| event.window.event == SDL_WINDOWEVENT_RESTORED
-						|| event.window.event == SDL_WINDOWEVENT_MINIMIZED
-						|| event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
+				if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED || event.window.event == SDL_WINDOWEVENT_RESTORED || event.window.event == SDL_WINDOWEVENT_MINIMIZED || event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
 				{
 					ShouldResize = true;
 				}
@@ -342,31 +338,30 @@ void SDL_InputThread() {
 						SDL_ShowCursor(SDL_ENABLE);
 				}
 				break;
-#endif
 			case SDL_CONTROLLERBUTTONDOWN:
-				{
-					std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.cbutton.which);
-					if (device != NULL)
-						device->gamepad_btn_input(event.cbutton.button, true, true);
-				}
-				break;
+			{
+				std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.cbutton.which);
+				if (device != NULL)
+					device->gamepad_btn_input(event.cbutton.button, true, true);
+			}
+			break;
 			case SDL_CONTROLLERBUTTONUP:
-				{
-					std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.cbutton.which);
-					if (device != NULL)
-						device->gamepad_btn_input(event.cbutton.button, false, true);
-				}
-				break;
+			{
+				std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.cbutton.which);
+				if (device != NULL)
+					device->gamepad_btn_input(event.cbutton.button, false, true);
+			}
+			break;
 			case SDL_CONTROLLERAXISMOTION:
+			{
+				std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.caxis.which);
+				if (device != NULL)
 				{
-					std::shared_ptr<SDLGamepad> device = SDLGamepad::GetSDLGamepad((SDL_JoystickID)event.caxis.which);
-					if (device != NULL)
-					{
-						device->gamepad_axis_input(event.caxis.axis, event.caxis.value, true);
-					}
+					device->gamepad_axis_input(event.caxis.axis, event.caxis.value, true);
 				}
-				break;
-#if !defined(__APPLE__)
+			}
+			break;
+
 			case SDL_MOUSEMOTION:
 				gui_set_mouse_position(event.motion.x, event.motion.y);
 				checkRawInput();
@@ -388,7 +383,7 @@ void SDL_InputThread() {
 					SDL_GetWindowSize(window, &x, &y);
 					x /= 2;
 					y /= 2;
-					if (std::abs(x - event.motion.x) > 10 || std::abs(y - event.motion.y) > 10 )
+					if (std::abs(x - event.motion.x) > 10 || std::abs(y - event.motion.y) > 10)
 						SDL_WarpMouseInWindow(window, x, y);
 				}
 				break;
@@ -403,7 +398,8 @@ void SDL_InputThread() {
 					if (!mouseCaptured || !gameRunning)
 						sdl_mouse->setAbsPos(event.button.x, event.button.y);
 					bool pressed = event.button.state == SDL_PRESSED;
-					switch (event.button.button) {
+					switch (event.button.button)
+					{
 					case SDL_BUTTON_LEFT:
 						sdl_mouse->setButton(Mouse::LEFT_BUTTON, pressed);
 						break;
@@ -429,7 +425,6 @@ void SDL_InputThread() {
 				if (!config::UseRawInput)
 					sdl_mouse->setWheel(-event.wheel.y);
 				break;
-#endif
 			case SDL_JOYDEVICEADDED:
 				sdl_open_joystick(event.jdevice.which);
 				break;
@@ -437,16 +432,16 @@ void SDL_InputThread() {
 			case SDL_JOYDEVICEREMOVED:
 				sdl_close_joystick((SDL_JoystickID)event.jdevice.which);
 				break;
-		}
+			}
 		}
 	}
 }
 
 void input_sdl_handle()
 {
-	//NOTICE_LOG(INPUT, "Input Polled");
 	if(!ThreadCreated){std::thread sdl_input_thread(&SDL_InputThread); sdl_input_thread.detach();}
 	if(!gui_is_open()){do_sdl();} // We don't do this while the UI is open.
+	
 }
 
 void sdl_window_set_text(const char* text)

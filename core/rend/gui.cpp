@@ -79,12 +79,12 @@ static void emuEventCallback(Event event)
 		break;
 	case Event::Start:
 		GamepadDevice::load_system_mappings();
-		if (config::AutoLoadState && settings.imgread.ImagePath[0] != '\0')
+		if (config::AutoLoadState && !settings.content.path.empty())
 			// TODO don't load state if using naomi networking
 			dc_loadstate(config::SavestateSlot);
 		break;
 	case Event::Terminate:
-		if (config::AutoSaveState && settings.imgread.ImagePath[0] != '\0')
+		if (config::AutoSaveState && !settings.content.path.empty())
 			dc_savestate(config::SavestateSlot);
 		break;
 	default:
@@ -403,6 +403,7 @@ void gui_open_settings()
 	{
 		gui_state = GuiState::Commands;
 		HideOSD();
+		emu.stop();
 	}
 	else if (gui_state == GuiState::VJoyEdit)
 	{
@@ -442,7 +443,6 @@ void gui_stop_game(const std::string& message)
 		emu.unloadGame();
 		gui_state = GuiState::Main;
 		game_started = false;
-		settings.imgread.ImagePath[0] = '\0';
 		reset_vmus();
 		if (!message.empty())
 			error_msg = "Flycast has stopped.\n\n" + message;
@@ -456,8 +456,6 @@ void gui_stop_game(const std::string& message)
 
 static void gui_display_commands()
 {
-	emu.stop();
-
    	display_vmus();
 
     centerNextWindow();
@@ -465,7 +463,8 @@ static void gui_display_commands()
 
     ImGui::Begin("##commands", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
 
-	if (settings.imgread.ImagePath[0] == '\0')
+    bool loadSaveStateDisabled = settings.content.path.empty() || settings.online;
+	if (loadSaveStateDisabled)
 	{
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
@@ -2107,9 +2106,9 @@ static void gui_display_content()
 					{
 						if (gui_state == GuiState::SelectDisk)
 						{
-							strcpy(settings.imgread.ImagePath, game.path.c_str());
+							settings.content.path = game.path;
 							try {
-								DiscSwap();
+								DiscSwap(game.path);
 								gui_state = GuiState::Closed;
 							} catch (const FlycastException& e) {
 								error_msg = e.what();
@@ -2207,7 +2206,7 @@ static void gui_network_start()
 		else
 		{
 			gui_state = GuiState::Main;
-			settings.imgread.ImagePath[0] = '\0';
+			settings.content.path.clear();
 		}
 	}
 	else
@@ -2226,7 +2225,7 @@ static void gui_network_start()
 		NetworkHandshake::instance->stop();
 		networkStatus.get();
 		gui_state = GuiState::Main;
-		settings.imgread.ImagePath[0] = '\0';
+		settings.content.path.clear();
 	}
 	ImGui::PopStyleVar();
 
@@ -2266,8 +2265,8 @@ static void gui_display_loadscreen()
 #ifdef TEST_AUTOMATION
 			die("Game load failed");
 #endif
+			emu.unloadGame();
 			gui_state = GuiState::Main;
-			settings.imgread.ImagePath[0] = '\0';
 		}
 	}
 	else
@@ -2296,13 +2295,12 @@ void gui_display_ui()
 		return;
 	if (gui_state == GuiState::Main)
 	{
-		std::string game_file = settings.imgread.ImagePath;
-		if (!game_file.empty())
+		if (!settings.content.path.empty())
 		{
 #ifndef __ANDROID__
 			commandLineStart = true;
 #endif
-			gui_start_game(game_file);
+			gui_start_game(settings.content.path);
 			return;
 		}
 	}

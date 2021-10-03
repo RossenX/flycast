@@ -61,6 +61,49 @@ enum DreamcastKey
 	DC_AXIS2_UP,
 	DC_AXIS2_DOWN,
 
+	// Macros
+
+	BC_03 = (DC_BTN_A | DC_BTN_X), 							// 1+4 '
+	BC_14 = (DC_BTN_B | DC_BTN_Y),							// 2+5 '
+	BC_25 = (DC_BTN_C | DC_BTN_Z),							// 3+6 '
+	BC_01 = (DC_BTN_A | DC_BTN_B),                          // 1+2 '
+	BC_12 = (DC_BTN_B | DC_BTN_C),							// 2+3 '
+	BC_34 = (DC_BTN_X | DC_BTN_Y),							// 4+5 '
+	BC_45 = (DC_BTN_Y | DC_BTN_Z),							// 5+6 '
+	BC_012 = (DC_BTN_A | DC_BTN_B | DC_BTN_C),				// 1+2+3 '
+	BC_345 = (DC_BTN_X | DC_BTN_Y | DC_BTN_Z),				// 4+5+6 '
+
+	BC_XA = (DC_BTN_X | DC_BTN_A), 							// X+A
+	BC_YB = (DC_BTN_Y | DC_BTN_B),							// Y+B
+	BC_LR = (DC_BTN_Z | DC_BTN_C),							// L(Z)+R
+	BC_XY = (DC_BTN_X | DC_BTN_Y),                          // X+Y
+	BC_YL = (DC_BTN_Y | DC_BTN_Z),							// Y+L(Z)
+	BC_AB = (DC_BTN_A | DC_BTN_B),							// A+B
+	BC_BR = (DC_BTN_B | DC_BTN_C),							// B+R(C)
+	BC_XYL = (DC_BTN_X | DC_BTN_Y | DC_BTN_Z),				// X+Y+L(Z)
+	BC_ABR = (DC_BTN_A | DC_BTN_B | DC_BTN_C),				// A+B+R(C)
+
+	// Kept for legacy conversion mostly, not really used <Deprecated Kept for Converting Old input codeo only>
+	AXIS_BC_03 = (DC_BTN_A | DC_BTN_X), 						// 1+4 '
+	AXIS_BC_14 = (DC_BTN_B | DC_BTN_Y),							// 2+5 '
+	AXIS_BC_25 = (DC_BTN_C | DC_BTN_Z),							// 3+6 '
+	AXIS_BC_01 = (DC_BTN_A | DC_BTN_B),                         // 1+2 '
+	AXIS_BC_12 = (DC_BTN_B | DC_BTN_C),							// 2+3 '
+	AXIS_BC_34 = (DC_BTN_X | DC_BTN_Y),							// 4+5 '
+	AXIS_BC_45 = (DC_BTN_Y | DC_BTN_Z),							// 5+6 '
+	AXIS_BC_012 = (DC_BTN_A | DC_BTN_B | DC_BTN_C),				// 1+2+3 '
+	AXIS_BC_345 = (DC_BTN_X | DC_BTN_Y | DC_BTN_Z),				// 4+5+6 '
+
+	AXIS_BC_XA = (DC_BTN_X | DC_BTN_A), 						// X+A
+	AXIS_BC_YB = (DC_BTN_Y | DC_BTN_B),							// Y+B
+	AXIS_BC_LR = (DC_BTN_Z | DC_BTN_C),							// L(Z)+R
+	AXIS_BC_XY = (DC_BTN_X | DC_BTN_Y),                         // X+Y
+	AXIS_BC_YL = (DC_BTN_Y | DC_BTN_Z),							// Y+L(Z)
+	AXIS_BC_AB = (DC_BTN_A | DC_BTN_B),							// A+B
+	AXIS_BC_BR = (DC_BTN_B | DC_BTN_C),							// B+R(C)
+	AXIS_BC_XYL = (DC_BTN_X | DC_BTN_Y | DC_BTN_Z),				// X+Y+L(Z)
+	AXIS_BC_ABR = (DC_BTN_A | DC_BTN_B | DC_BTN_C),				// A+B+R(C)
+
 	// System axes
 	EMU_AXIS_NONE        = 0,
 };

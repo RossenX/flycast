@@ -54,9 +54,8 @@ button_list[] =
 	{ DC_AXIS_DOWN, "compat", "btn_analog_down" },
 	{ DC_AXIS_LEFT, "compat", "btn_analog_left" },
 	{ DC_AXIS_RIGHT, "compat", "btn_analog_right" },
-	{ DC_BTN_RELOAD, "dreamcast", "reload" }
+	{ DC_BTN_RELOAD, "dreamcast", "reload" },
 
-	/* Macros Naomi
 	{ BC_03, "compat", "BC_03" },
 	{ BC_14, "compat", "BC_14" },
 	{ BC_25, "compat", "BC_25" },
@@ -77,7 +76,6 @@ button_list[] =
 	{ BC_BR, "compat", "BC_BR" },
 	{ BC_XYL, "compat", "BC_XYL" },
 	{ BC_ABR, "compat", "BC_ABR" }
-	*/
 
 };
 
@@ -103,7 +101,7 @@ axis_list[] =
 	{ DC_AXIS_LT, "dreamcast", "axis_trigger_left",  "compat", "axis_trigger_left_inverted" },
 	{ DC_AXIS_RT, "dreamcast", "axis_trigger_right", "compat", "axis_trigger_right_inverted" },
 
-	// legacy (v2)
+	// legacy (v2) <Deprecated Kept for Converting Old input codeo only>
 	{ DC_AXIS_RIGHT, "dreamcast", "axis_x", "compat", "axis_x_inverted" },
 	{ DC_AXIS_DOWN, "dreamcast", "axis_y", "compat", "axis_y_inverted" },
 	{ DC_AXIS2_RIGHT, "dreamcast", "axis_right_x", "compat", "axis_right_x_inverted" },
@@ -128,7 +126,28 @@ axis_list[] =
 	{ DC_DPAD2_RIGHT, "compat", "axis_dpad2_right", "compat", "axis_dpad2_right_inverted" },
 	{ DC_DPAD2_UP, "compat", "axis_dpad2_up", "compat", "axis_dpad2_up_inverted" },
 	{ DC_DPAD2_DOWN, "compat", "axis_dpad2_down", "compat", "axis_dpad2_down_inverted" },
+	
+	// Macros Naomi <Deprecated Kept for Converting Old input codeo only>
+	{ AXIS_BC_03, "compat", "axis_BC_03","compat", "axis_BC_03_inverted" },
+	{ AXIS_BC_14, "compat", "axis_BC_14","compat", "axis_BC_14_inverted" },
+	{ AXIS_BC_25, "compat", "axis_BC_25","compat", "axis_BC_25_inverted" },
+	{ AXIS_BC_01, "compat", "axis_BC_01","compat", "axis_BC_01_inverted" },
+	{ AXIS_BC_12, "compat", "axis_BC_12","compat", "axis_BC_12_inverted" },
+	{ AXIS_BC_34, "compat", "axis_BC_34","compat", "axis_BC_34_inverted" },
+	{ AXIS_BC_45, "compat", "axis_BC_45","compat", "axis_BC_45_inverted" },
+	{ AXIS_BC_012, "compat", "axis_BC_012","compat", "axis_BC_012_inverted" },
+	{ AXIS_BC_345, "compat", "axis_BC_345","compat", "axis_BC_345_inverted" },
 
+	// Macros Dreamcast <Deprecated Kept for Converting Old input codeo only>
+	{ AXIS_BC_XA, "compat", "axis_BC_XA","compat", "axis_BC_XA_inverted" },
+	{ AXIS_BC_YB, "compat", "axis_BC_YB","compat", "axis_BC_YB_inverted" },
+	{ AXIS_BC_LR, "compat", "axis_BC_LR","compat", "axis_BC_LR_inverted" },
+	{ AXIS_BC_XY, "compat", "axis_BC_XY","compat", "axis_BC_XY_inverted" },
+	{ AXIS_BC_YL, "compat", "axis_BC_YL","compat", "axis_BC_YL_inverted" },
+	{ AXIS_BC_AB, "compat", "axis_BC_AB","compat", "axis_BC_AB_inverted" },
+	{ AXIS_BC_BR, "compat", "axis_BC_BR","compat", "axis_BC_BR_inverted" },
+	{ AXIS_BC_XYL, "compat", "axis_BC_XYL","compat", "axis_BC_XYL_inverted" },
+	{ AXIS_BC_ABR, "compat", "axis_BC_ABR","compat", "axis_BC_ABR_inverted" }
 };
 
 std::map<std::string, std::shared_ptr<InputMapping>> InputMapping::loaded_mappings;

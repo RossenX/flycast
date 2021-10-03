@@ -657,11 +657,22 @@ const Mapping dcButtons[] = {
 	{ DC_BTN_C, "C" },
 	{ DC_BTN_D, "D" },
 	{ DC_BTN_Z, "Z" },
-
+	
 	{ EMU_BTN_NONE, "Triggers" },
 	{ DC_AXIS_LT, "Left Trigger" },
 	{ DC_AXIS_RT, "Right Trigger" },
 
+	{ EMU_BTN_NONE, "Macros" },
+	{ BC_XA,  "X + A" },
+	{ BC_YB,  "Y + B" },
+	{ BC_LR,  "L + R" },
+	{ BC_XY,  "X + Y" },
+	{ BC_YL,  "Y + L" },
+	{ BC_AB,  "A + B" },
+	{ BC_BR,  "B + R" },
+	{ BC_XYL,  "X+Y+L" },
+	{ BC_ABR,  "A+B+R" },
+	
 	{ EMU_BTN_NONE, "System Buttons" },
 	{ DC_BTN_START, "Start" },
 	{ DC_BTN_RELOAD, "Reload" },
@@ -701,6 +712,17 @@ const Mapping arcadeButtons[] = {
 	{ DC_DPAD2_LEFT, "Button 7" },
 	{ DC_DPAD2_RIGHT, "Button 8" },
 //	{ DC_DPAD2_RIGHT, "Button 9" }, // TODO
+
+	{ EMU_BTN_NONE, "Macros" },
+	{ BC_03,  "1 + 4" },
+	{ BC_14,  "2 + 5" },
+	{ BC_25,  "3 + 6" },
+	{ BC_01,  "1 + 2" },
+	{ BC_12,  "2 + 3" },
+	{ BC_34,  "4 + 5" },
+	{ BC_45,  "5 + 6" },
+	{ BC_012,  "1+2+3" },
+	{ BC_345,  "4+5+6" },
 
 	{ EMU_BTN_NONE, "Triggers" },
 	{ DC_AXIS_LT, "Left Trigger" },

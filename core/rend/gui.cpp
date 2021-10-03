@@ -468,15 +468,18 @@ static void gui_display_commands()
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 	}
-	OptionCheckbox("Player Names", config::ShowNamePlates,"Names of Players while playing offline");
+	OptionCheckbox("Player Names", config::ShowNamePlates, "Names of Players while playing offline");
 	if (!config::GGPOEnable)
 	{
-		if (ImGui::Button("Load State", ImVec2(110 * scaling, 50 * scaling)))
+		// Load State
+		if (ImGui::Button("Load State", ImVec2(110 * scaling, 50 * scaling)) && !loadSaveStateDisabled)
 		{
 			gui_state = GuiState::Closed;
 			dc_loadstate(config::SavestateSlot);
 		}
 		ImGui::SameLine();
+
+		// Slot #
 		std::string slot = "Slot " + std::to_string((int)config::SavestateSlot + 1);
 		if (ImGui::Button(slot.c_str(), ImVec2(80 * scaling - ImGui::GetStyle().FramePadding.x, 50 * scaling)))
 			ImGui::OpenPopup("slot_select_popup");
@@ -492,17 +495,21 @@ static void gui_display_commands()
 			ImGui::EndPopup();
 		}
 		ImGui::SameLine();
-		if (ImGui::Button("Save State", ImVec2(110 * scaling, 50 * scaling)))
+
+		// Save State
+		if (ImGui::Button("Save State", ImVec2(110 * scaling, 50 * scaling)) && !loadSaveStateDisabled)
 		{
 			gui_state = GuiState::Closed;
 			dc_savestate(config::SavestateSlot);
 		}
-		if (settings.imgread.ImagePath[0] == '\0')
+		if (loadSaveStateDisabled)
 		{
 			ImGui::PopItemFlag();
 			ImGui::PopStyleVar();
 		}
-	}else{
+	}
+	else
+	{
 		OptionCheckbox("Network Statistics", config::NetworkStats,"Display network statistics on screen");
 	}
 	ImGui::Columns(2, "buttons", false);
@@ -2435,8 +2442,8 @@ void PlayerNamesFrame(){
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.25,0),0,ImVec2(0.5,0.25));
-	ImGui::SetNextWindowSize(ImVec2(0, 26));
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.25,0),0,ImVec2(0.5,0));
+	ImGui::SetNextWindowSize(ImVec2(0, 0));
 	ImGui::SetNextWindowBgAlpha(0.5f);
 	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.557f, 0.268f, 0.965f, 0.5f));
 
@@ -2456,8 +2463,8 @@ void PlayerNamesFrame(){
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.75,0),0,ImVec2(0.5,0.25));
-	ImGui::SetNextWindowSize(ImVec2(0, 26));
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.75,0),0,ImVec2(0.5,0));
+	ImGui::SetNextWindowSize(ImVec2(0, 0));
 	ImGui::SetNextWindowBgAlpha(0.5f);
 	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.557f, 0.268f, 0.965f, 0.5f));
 

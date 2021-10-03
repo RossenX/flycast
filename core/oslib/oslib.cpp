@@ -1,25 +1,20 @@
 /*
 	Copyright 2021 flyinghead
-
 	This file is part of Flycast.
-
     Flycast is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 2 of the License, or
     (at your option) any later version.
-
     Flycast is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with Flycast.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "oslib.h"
 #include "stdclass.h"
 #include "cfg/cfg.h"
-#include "cfg/option.h"
 
 namespace hostfs
 {
@@ -27,16 +22,7 @@ namespace hostfs
 std::string getVmuPath(const std::string& port)
 {
 	char tempy[512];
-	if(config::GGPOEnable){
-		if(config::ActAsServer){
-			sprintf(tempy, "vmu_save_%s.bin", port.c_str());
-		}else{
-			sprintf(tempy, "vmu_save_%s_client.bin", port.c_str());
-		}
-	}else{
-		sprintf(tempy, "vmu_save_%s.bin", port.c_str());
-	}
-	
+	sprintf(tempy, "vmu_save_%s.bin", port.c_str());
 	// VMU saves used to be stored in .reicast, not in .reicast/data
 	std::string apath = get_writable_config_path(tempy);
 	if (!file_exists(apath))
@@ -47,7 +33,7 @@ std::string getVmuPath(const std::string& port)
 std::string getArcadeFlashPath()
 {
 	std::string nvmemSuffix = cfgLoadStr("net", "nvmem", "");
-	return settings.imgread.ImagePath + nvmemSuffix;
+	return get_game_save_prefix() + nvmemSuffix;
 }
 
 std::string findFlash(const std::string& prefix, const std::string& names)
@@ -105,10 +91,8 @@ std::string getSavestatePath(int index, bool writable)
 	char index_str[4] = "";
 	if (index != 0) // When index is 0, use same name before multiple states is added
 		sprintf(index_str, "_%d", index);
-	
-	state_file = state_file + index_str + ".state";
-	if(config::GGPOEnable){state_file.append("-ggpo");}
 
+	state_file = state_file + index_str + ".state";
 	if (writable)
 		return get_writable_data_path(state_file);
 	else

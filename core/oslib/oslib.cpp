@@ -15,6 +15,7 @@
 #include "oslib.h"
 #include "stdclass.h"
 #include "cfg/cfg.h"
+#include "cfg/option.h"
 
 namespace hostfs
 {
@@ -22,7 +23,15 @@ namespace hostfs
 std::string getVmuPath(const std::string& port)
 {
 	char tempy[512];
-	sprintf(tempy, "vmu_save_%s.bin", port.c_str());
+	if(config::GGPOEnable){
+		if(config::ActAsServer){
+			sprintf(tempy, "vmu_save_%s.bin", port.c_str());
+		}else{
+			sprintf(tempy, "vmu_save_%s_client.bin", port.c_str());
+		}
+	}else{
+		sprintf(tempy, "vmu_save_%s.bin", port.c_str());
+	}
 	// VMU saves used to be stored in .reicast, not in .reicast/data
 	std::string apath = get_writable_config_path(tempy);
 	if (!file_exists(apath))
@@ -93,6 +102,8 @@ std::string getSavestatePath(int index, bool writable)
 		sprintf(index_str, "_%d", index);
 
 	state_file = state_file + index_str + ".state";
+	if(config::GGPOEnable){state_file.append("-ggpo");}
+	
 	if (writable)
 		return get_writable_data_path(state_file);
 	else

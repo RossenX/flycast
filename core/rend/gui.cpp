@@ -2460,11 +2460,11 @@ void gui_display_osd()
 void PlayerNamesFrame(){
 
 	//ImGuiIO& io = ImGui::GetIO();
-	//float _scaling = (float)(io.DisplaySize.x / 1080);
+	float _scaling = (float)(ImGui::GetIO().DisplaySize.y / 480);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.25,0),0,ImVec2(0.5,0));
+	ImGui::SetNextWindowPos(ImVec2((ImGui::GetIO().DisplaySize.x /2) - (160 * _scaling),0),0,ImVec2(0.5,0));
 	ImGui::SetNextWindowSize(ImVec2(0, 0));
 	ImGui::SetNextWindowBgAlpha(0.5f);
 	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.557f, 0.268f, 0.965f, 0.5f));
@@ -2485,7 +2485,7 @@ void PlayerNamesFrame(){
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.75,0),0,ImVec2(0.5,0));
+	ImGui::SetNextWindowPos(ImVec2((ImGui::GetIO().DisplaySize.x /2) + (160 * _scaling),0),0,ImVec2(0.5,0));
 	ImGui::SetNextWindowSize(ImVec2(0, 0));
 	ImGui::SetNextWindowBgAlpha(0.5f);
 	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.557f, 0.268f, 0.965f, 0.5f));

@@ -89,7 +89,7 @@ static int msPerFrameIndex;
 static time_point<steady_clock> lastFrameTime;
 static int msPerFrameAvg;
 static bool _endOfFrame;
-static MiniUPnP miniupnp;
+//static MiniUPnP miniupnp;
 static int analogAxes;
 static bool absPointerPos;
 static bool inRollback;
@@ -473,7 +473,7 @@ void stopSession()
 		return;
 	ggpo_close_session(ggpoSession);
 	ggpoSession = nullptr;
-	miniupnp.Term();
+	//miniupnp.Term();
 	emu.setNetworkState(false);
 }
 
@@ -616,8 +616,8 @@ std::future<bool> startNetwork()
 #ifdef SYNC_TEST
 			startSession(0, 0);
 #else
-			miniupnp.Init();
-			miniupnp.AddPortMapping(SERVER_PORT, false);
+			//miniupnp.Init();
+			//miniupnp.AddPortMapping(SERVER_PORT, false);
 
 			try {
 				if (config::ActAsServer)
@@ -626,7 +626,7 @@ std::future<bool> startNetwork()
 					// Use SERVER_PORT-1 as local port if connecting to ourselves
 					startSession(config::NetworkServer.get().empty() || config::NetworkServer.get() == "127.0.0.1" ? SERVER_PORT - 1 : SERVER_PORT, 1);
 			} catch (...) {
-				miniupnp.Term();
+				//miniupnp.Term();
 				throw;
 			}
 #endif

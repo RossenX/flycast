@@ -73,7 +73,7 @@ using namespace std::chrono;
 
 constexpr int ProtocolVersion = 1;
 constexpr int MAX_PLAYERS = 2;
-constexpr int SERVER_PORT = 19713;
+constexpr int SERVER_PORT = 27886;
 
 constexpr u32 BTN_TRIGGER_LEFT	= DC_BTN_RELOAD << 1;
 constexpr u32 BTN_TRIGGER_RIGHT	= DC_BTN_RELOAD << 2;

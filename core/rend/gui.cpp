@@ -68,6 +68,9 @@ static void reset_vmus();
 static void term_vmus();
 static void displayCrosshairs();
 
+
+ImFont* Namesfont;
+
 GameScanner scanner;
 
 static void emuEventCallback(Event event)
@@ -171,10 +174,13 @@ void gui_init()
     	0x0020, 0xFFFF, // All chars
         0,
     };
-
+	
     io.Fonts->AddFontFromMemoryCompressedTTF(roboto_medium_compressed_data, roboto_medium_compressed_size, 17.f * scaling, nullptr, ranges);
     ImFontConfig font_cfg;
     font_cfg.MergeMode = true;
+
+	Namesfont = io.Fonts->AddFontFromMemoryCompressedTTF(roboto_medium_compressed_data, roboto_medium_compressed_size, 17.f * scaling * 4, nullptr, ranges);
+
 #ifdef _WIN32
     u32 cp = GetACP();
     std::string fontDir = std::string(nowide::getenv("SYSTEMROOT")) + "\\Fonts\\";
@@ -2462,43 +2468,43 @@ void PlayerNamesFrame(){
 	//ImGuiIO& io = ImGui::GetIO();
 	float _scaling = (float)(ImGui::GetIO().DisplaySize.y / 480);
 
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-	ImGui::SetNextWindowPos(ImVec2((ImGui::GetIO().DisplaySize.x /2) - (160 * _scaling),0),0,ImVec2(0.5,0));
-	ImGui::SetNextWindowSize(ImVec2(0, 0));
-	ImGui::SetNextWindowBgAlpha(0.5f);
-	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.557f, 0.268f, 0.965f, 0.5f));
-
 	char Player1Name[256]; char Player2Name[256];
 	strcpy(Player1Name, config::p1Name.get().c_str()); 
 	strcpy(Player2Name, config::p2Name.get().c_str());
 
-	ImGui::Begin("p1Name", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
-
-	// Send Queue
-	
-	ImGui::Text("%s",Player1Name);
-
-	ImGui::End();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleVar(2);
-
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(2, 2));
+
+
+	ImGui::SetNextWindowPos(ImVec2((ImGui::GetIO().DisplaySize.x /2) - (160 * _scaling),0),0,ImVec2(0.5,0));
+	ImGui::SetNextWindowSize(ImVec2(0, 0));
+	ImGui::SetNextWindowBgAlpha(0.0f);
+	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.557f, 0.268f, 0.965f, 0.5f));
+
+	ImGui::PushFontShadow(0xFF000000);
+	ImGui::PushFont(Namesfont);
+
+	ImGui::Begin("p1Name", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+	ImGui::TextColored(ImVec4(0.937f, 0.192f, 0.321f, 1.0f),"%s",Player1Name);
+	ImGui::SetWindowFontScale(_scaling/3.5);
+	ImGui::End();
+
 	ImGui::SetNextWindowPos(ImVec2((ImGui::GetIO().DisplaySize.x /2) + (160 * _scaling),0),0,ImVec2(0.5,0));
 	ImGui::SetNextWindowSize(ImVec2(0, 0));
-	ImGui::SetNextWindowBgAlpha(0.5f);
+	ImGui::SetNextWindowBgAlpha(0.0f);
 	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.557f, 0.268f, 0.965f, 0.5f));
 
 	ImGui::Begin("p2Name", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
-
-	// Send Queue
-	
-	ImGui::Text("%s",Player2Name);
-
+	ImGui::TextColored(ImVec4(0.290f, 0.450f, 0.968f, 1.0f),"%s",Player2Name);
+	ImGui::SetWindowFontScale(_scaling/3.5);
 	ImGui::End();
+
+	ImGui::PopFontShadow();
+	ImGui::PopFont();
 	ImGui::PopStyleColor();
-	ImGui::PopStyleVar(2);
+	ImGui::PopStyleVar(4);
 }
 
 void gui_open_onboarding()

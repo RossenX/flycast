@@ -4,15 +4,16 @@
 		{
 			"type": "cppbuild",
 			"label": "C/C++: mingw32-make.exe build active file",
-			"command": "D:\\msys64\\mingw64\\bin\\mingw32-make.exe",
+			"command": "D:/msys64/mingw64.exe",
 			"args": [
+				"mingw32-make",
 				"-j",
 				"8",
 				"-C",
-				"${workspaceFolder}\\build"
+				"build"
 			],
 			"options": {
-				"cwd": "${fileDirname}"
+				"cwd": "${workspaceFolder}"
 			},
 			"problemMatcher": [
 				"$gcc"

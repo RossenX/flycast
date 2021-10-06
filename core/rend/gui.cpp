@@ -467,17 +467,17 @@ static void gui_display_commands()
     ImGui::SetNextWindowSize(ImVec2(330 * scaling, 0));
 
     ImGui::Begin("##commands", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
-
-    bool loadSaveStateDisabled = settings.content.path.empty() || settings.online;
-	if (loadSaveStateDisabled)
-	{
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-	}
 	OptionCheckbox("Player Names", config::ShowNamePlates, "Names of Players while playing offline");
+
 	if (!config::GGPOEnable)
 	{
-		// Load State
+		bool loadSaveStateDisabled = settings.content.path.empty() || settings.online;
+		if (loadSaveStateDisabled)
+		{
+			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+		}
+
 		if (ImGui::Button("Load State", ImVec2(110 * scaling, 50 * scaling)) && !loadSaveStateDisabled)
 		{
 			gui_state = GuiState::Closed;
@@ -485,7 +485,6 @@ static void gui_display_commands()
 		}
 		ImGui::SameLine();
 
-		// Slot #
 		std::string slot = "Slot " + std::to_string((int)config::SavestateSlot + 1);
 		if (ImGui::Button(slot.c_str(), ImVec2(80 * scaling - ImGui::GetStyle().FramePadding.x, 50 * scaling)))
 			ImGui::OpenPopup("slot_select_popup");
@@ -502,7 +501,6 @@ static void gui_display_commands()
 		}
 		ImGui::SameLine();
 
-		// Save State
 		if (ImGui::Button("Save State", ImVec2(110 * scaling, 50 * scaling)) && !loadSaveStateDisabled)
 		{
 			gui_state = GuiState::Closed;
@@ -513,11 +511,13 @@ static void gui_display_commands()
 			ImGui::PopItemFlag();
 			ImGui::PopStyleVar();
 		}
+		
 	}
 	else
 	{
 		OptionCheckbox("Network Statistics", config::NetworkStats,"Display network statistics on screen");
 	}
+
 	ImGui::Columns(2, "buttons", false);
 	if (ImGui::Button("Settings", ImVec2(150 * scaling, 50 * scaling)))
 	{

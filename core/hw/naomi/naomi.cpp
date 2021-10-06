@@ -29,6 +29,8 @@ static int BControl, BCmd, BLastCmd;
 static int GControl, GCmd, GLastCmd;
 static int SerStep, SerStep2;
 
+bool NaomiGameLoaded = false;
+
 #ifdef NAOMI_COMM
 	u32 CommOffset;
 	u32* CommSharedMem;
@@ -447,6 +449,7 @@ void Naomi_DmaStart(u32 addr, u32 data)
 			start += block_len;
 			SB_GDLEND += block_len;
 		}
+		NaomiGameLoaded = true;
 		SB_GDSTARD = start;
 	}
 	else
@@ -680,6 +683,7 @@ void naomi_Serialize(void **data, unsigned int *total_size)
 	REICAST_S(aw_maple_devs);
 	REICAST_S(coin_chute_time);
 	REICAST_S(aw_ram_test_skipped);
+	REICAST_S(NaomiGameLoaded);
 	// TODO serialize m3comm?
 }
 
@@ -716,5 +720,10 @@ void naomi_Unserialize(void **data, unsigned int *total_size, serialize_version_
 	{
 		REICAST_US(coin_chute_time);
 		REICAST_US(aw_ram_test_skipped);
+	}
+	if(version >= V21){ // Assume older savestates all have the game loaded, otherwise the start button will never work on older states
+		REICAST_US(NaomiGameLoaded);
+	}else{
+		NaomiGameLoaded = true;
 	}
 }

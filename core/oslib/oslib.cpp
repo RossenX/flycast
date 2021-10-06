@@ -41,8 +41,7 @@ std::string getVmuPath(const std::string& port)
 
 std::string getArcadeFlashPath()
 {
-	std::string nvmemSuffix = cfgLoadStr("net", "nvmem", "");
-	return get_game_save_prefix() + nvmemSuffix;
+	return settings.content.path;
 }
 
 std::string findFlash(const std::string& prefix, const std::string& names)

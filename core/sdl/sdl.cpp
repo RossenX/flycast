@@ -286,8 +286,9 @@ void SDL_InputThread()
 				checkRawInput();
 				if (event.key.repeat == 0)
 				{
-					// Exit FullScreen when pressing Escape
-					if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && window_fullscreen)
+					if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && gui_is_open()){
+						ToggleFlycastGUI = true;
+					}else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && window_fullscreen)
 					{
 						SDL_SetWindowFullscreen(window, 0);
 						SDL_ShowCursor(SDL_ENABLE);

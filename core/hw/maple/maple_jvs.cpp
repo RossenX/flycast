@@ -40,9 +40,6 @@ void load_naomi_eeprom()
 		if(config::GGPOEnable && !config::ActAsServer)
 			eeprom_file.append("_client");
 
-		if(config::GGPOEnable && config::ActAsServer)
-			eeprom_file.append("_host");
-
 		FILE* f = nowide::fopen(eeprom_file.c_str(), "rb");
 		if (f)
 		{
@@ -990,9 +987,6 @@ void maple_naomi_jamma::handle_86_subcommand()
 			
 			if(config::GGPOEnable && !config::ActAsServer)
 				eeprom_file.append("_client");
-
-			if(config::GGPOEnable && config::ActAsServer)
-				eeprom_file.append("_host");
 
 			FILE* f = nowide::fopen(eeprom_file.c_str(), "wb");
 			if (f)

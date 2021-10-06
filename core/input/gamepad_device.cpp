@@ -50,6 +50,7 @@ std::vector<std::shared_ptr<GamepadDevice>> GamepadDevice::_gamepads;
 std::mutex GamepadDevice::_gamepads_mutex;
 
 extern bool ToggleFlycastGUI;
+extern bool NaomiGameLoaded;
 
 #ifdef TEST_AUTOMATION
 #include "hw/sh4/sh4_sched.h"
@@ -162,6 +163,9 @@ bool GamepadDevice::handleButtonInput(int port, DreamcastKey key, bool pressed, 
 
 	if (gui_is_open()){return false;}
 
+	if(!NaomiGameLoaded && settings.platform.system == DC_PLATFORM_NAOMI && key == DC_BTN_START)
+		return false;
+	
 	if (key == EMU_BTN_NONE)
 		return false;
 
@@ -324,6 +328,9 @@ bool GamepadDevice::gamepad_axis_input(u32 code, int value, bool isevent)
 
 	auto handle_axis = [&](u32 port, DreamcastKey key, int v)
 	{
+		if(!NaomiGameLoaded && settings.platform.system == DC_PLATFORM_NAOMI && key == DC_BTN_START)
+			return false;
+
 		if ((key & DC_BTN_GROUP_MASK) == DC_AXIS_TRIGGERS)	// Triggers
 		{
 			if (key == DC_AXIS_LT)

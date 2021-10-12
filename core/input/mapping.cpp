@@ -257,11 +257,13 @@ void InputMapping::load(FILE* fp, bool arcade)
 			break;
 		}
 		int port = 0;
+		/*
 		if (key[key.size() - 1] >= '1' && key[key.size() - 1] <= '3')
 		{
 			port = key[key.size() - 1] - '0';
 			key = key.substr(0, key.size() - 1);
 		}
+		*/
 		DreamcastKey id = getKeyId(key);
 		set_button(port, id, code);
 	}
@@ -287,11 +289,13 @@ void InputMapping::load(FILE* fp, bool arcade)
 			break;
 		}
 		int port = 0;
+		/*
 		if (key[key.size() - 1] >= '1' && key[key.size() - 1] <= '3')
 		{
 			port = key[key.size() - 1] - '0';
 			key = key.substr(0, key.size() - 1);
 		}
+		*/
 		DreamcastKey id = getKeyId(key);
 		set_axis(port, id, code, positive);
 	}

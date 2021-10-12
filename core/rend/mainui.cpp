@@ -42,6 +42,7 @@ bool mainui_rend_frame()
 	os_DoEvents();
 	if(doDaQuit){
 		dc_exit();
+		exit(0);
 	}
 	
 	if(gui_is_open())UpdateInputState();

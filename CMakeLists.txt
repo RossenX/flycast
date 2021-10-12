@@ -221,7 +221,7 @@ if(NOT LIBRETRO)
 		execute_process(COMMAND ${CMAKE_COMMAND}
 			"-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/core/deps/SDL"
 			-DLIBC=ON
-			-DBUILD_SHARED_LIBS=OFF
+			-DBUILD_SHARED_LIBS=ON
 			-G "${CMAKE_GENERATOR}"
 			${SDL_CMAKE_ARCH_ARG}
 			"${CMAKE_CURRENT_SOURCE_DIR}/core/deps/SDL"
@@ -248,8 +248,8 @@ if(NOT LIBRETRO)
 	    else()
 	        target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 	    endif()
-	    if((APPLE OR WIN32) AND TARGET SDL2::SDL2-static)
-	        target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2-static)
+	    if((APPLE OR WIN32) AND TARGET SDL2::SDL2)
+	        target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
 	    elseif(TARGET SDL2::SDL2)
 	        target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
 	    else()

@@ -471,6 +471,7 @@ void os_CreateWindow()
 	CreateMainWindow();
 	InitRenderApi();
 #endif	// !USE_SDL
+FreeConsole();
 }
 
 #ifndef USE_SDL

@@ -25,6 +25,7 @@
 #include "wsi/context.h"
 #include "cfg/option.h"
 #include "emulator.h"
+#include <SDL.h>
 
 bool mainui_enabled;
 u32 MainFrameCount;
@@ -42,6 +43,7 @@ bool mainui_rend_frame()
 	os_DoEvents();
 	if(doDaQuit){
 		dc_exit();
+		SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
 		exit(0);
 	}
 	

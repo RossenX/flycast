@@ -163,6 +163,11 @@ bool GamepadDevice::handleButtonInput(int port, DreamcastKey key, bool pressed, 
 
 	if (gui_is_open()){return false;}
 
+	if(!NaomiGameLoaded && settings.platform.system == DC_PLATFORM_NAOMI && key == DC_DPAD2_DOWN){ // In case we press the test button
+			NaomiGameLoaded = true;
+			return false;
+		}
+		
 	if(!NaomiGameLoaded && settings.platform.system == DC_PLATFORM_NAOMI && key == DC_BTN_START)
 		return false;
 	
@@ -328,6 +333,11 @@ bool GamepadDevice::gamepad_axis_input(u32 code, int value, bool isevent)
 
 	auto handle_axis = [&](u32 port, DreamcastKey key, int v)
 	{
+		if(!NaomiGameLoaded && settings.platform.system == DC_PLATFORM_NAOMI && key == DC_DPAD2_DOWN){ // In case we press the test button
+			NaomiGameLoaded = true;
+			return false;
+		}
+			
 		if(!NaomiGameLoaded && settings.platform.system == DC_PLATFORM_NAOMI && key == DC_BTN_START)
 			return false;
 
